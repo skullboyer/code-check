@@ -2065,7 +2065,7 @@ def CheckForMultilineCommentsAndStrings(filename, clean_lines, linenum, error):
     linenum: The number of the line to check.
     error: The function to call with any errors found.
   """
-  line = clean_lines.elided[linenum]
+  line = clean_lines.raw_lines[linenum]
 
   # Remove all \\ (escaped backslashes) from the line. They are OK, and the
   # second (escaped) slash may trigger later \" detection erroneously.
@@ -4385,6 +4385,7 @@ def CheckStyle(filename, clean_lines, linenum, file_extension, nesting_state,
   initial_spaces = 0
   cleansed_line = clean_lines.elided[linenum]
 
+  # @skull.
   CheckDevilFigure(filename, cleansed_line, line, prev, linenum, error)
   CheckPreprocessWhitespace(filename, linenum, cleansed_line, error)
   CheckMarcoUppercase(filename, linenum, cleansed_line, error)
@@ -5836,6 +5837,7 @@ def ProcessLine(filename, file_extension, clean_lines, line,
                            arguments: filename, clean_lines, line, error
   """
   raw_lines = clean_lines.raw_lines
+
   ParseNolintSuppressions(filename, raw_lines[line], line, error)
   nesting_state.Update(filename, clean_lines, line, error)
   CheckForNamespaceIndentation(filename, nesting_state, clean_lines, line,
@@ -6272,6 +6274,9 @@ def ParseArguments(args):
 
 
 def main():
+  if __file__.split("/")[-1].split(".")[0] != 'lint' or sys.argv[0].split("\\")[-1].split(".")[0] != 'lint':
+    print("Please confirm the file name is 'lint'")
+    sys.exit(-1)
   filenames = ParseArguments(sys.argv[1:])
 
   # Change stderr to write with replacement characters so we don't die
