@@ -6000,7 +6000,7 @@ def ProcessConfigOverrides(filename):
     if not base_name:
       break  # Reached the root directory.
 
-    cfg_file = os.path.join(abs_path, "CPPLINT.cfg")
+    cfg_file = os.path.join(abs_path, "LINT.cfg")
     abs_filename = abs_path
     if not os.path.isfile(cfg_file):
       continue
@@ -6049,6 +6049,46 @@ def ProcessConfigOverrides(filename):
             _root = os.path.join(os.path.dirname(cfg_file), val)
           elif name == 'headers':
             ProcessHppHeadersOption(val)
+          elif name == 'lint_file_naming':
+            print("name: %s, value = %s" % (name, val))
+          elif name == 'lint_copyright_sof':
+            print("name: %s, value = %s" % (name, val))
+          elif name == 'lint_newline_eof':
+            print("name: %s, value = %s" % (name, val))
+          elif name == 'lint_use_tab':
+            print("name: %s, value = %s" % (name, val))
+          elif name == 'lint_line_length':
+            print("name: %s, value = %s" % (name, val))
+          elif name == 'lint_function_line':
+            print("name: %s, value = %s" % (name, val))
+          elif name == 'lint_space_indent':
+            print("name: %s, value = %s" % (name, val))
+          elif name == 'lint_space_eol':
+            print("name: %s, value = %s" % (name, val))
+          elif name == 'lint_multiple_cmd':
+            print("name: %s, value = %s" % (name, val))
+          elif name == 'lint_block_braces':
+            print("name: %s, value = %s" % (name, val))
+          elif name == 'lint_space_keyword':
+            print("name: %s, value = %s" % (name, val))
+          elif name == 'lint_space_operator':
+            print("name: %s, value = %s" % (name, val))
+          elif name == 'lint_include_thus':
+            print("name: %s, value = %s" % (name, val))
+          elif name == 'lint_if_thus':
+            print("name: %s, value = %s" % (name, val))
+          elif name == 'lint_code_style':
+            print("name: %s, value = %s" % (name, val))
+          elif name == 'lint_user_naming':
+            print("name: %s, value = %s" % (name, val))
+          elif name == 'lint_macro_uppercase':
+            print("name: %s, value = %s" % (name, val))
+          elif name == 'lint_devil_numbers':
+            print("name: %s, value = %s" % (name, val))
+          elif name == 'lint_comment_style':
+            print("name: %s, value = %s" % (name, val))
+          elif name == 'lint_blank_line':
+            print("name: %s, value = %s" % (name, val))
           else:
             sys.stderr.write(
                 'Invalid configuration option (%s) in file %s\n' %
