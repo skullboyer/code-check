@@ -6274,9 +6274,10 @@ def ParseArguments(args):
 
 
 def main():
-  if __file__.split("/")[-1].split(".")[0] != 'lint' or sys.argv[0].split("\\")[-1].split(".")[0] != 'lint':
+  if __file__.split("/")[-1].split(".")[0] != 'lint' or os.path.abspath(sys.argv[0]).replace('\\', '/').split("/")[-1].split(".")[0] != 'lint':
     print("Please confirm the file name is 'lint'")
     sys.exit(-1)
+
   filenames = ParseArguments(sys.argv[1:])
 
   # Change stderr to write with replacement characters so we don't die
