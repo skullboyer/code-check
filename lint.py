@@ -197,6 +197,176 @@ Syntax: cpplint.py [--verbose=#] [--output=vs7] [--filter=-x,+y,...]
     file is located) and all sub-directories.
 """
 
+_LINTCFG = """
+# Copyright (c) 2022 skull.gu@gmail.com. All rights reserved.
+
+# Stop searching for additional config files.
+set noparent
+
+# Specifies the line of code for the project
+linelength=120
+
+# Error filter
+# -: filter, +: pass
+filter=+whitespace/preprocess
+
+# It's not worth lint-gardening the file.
+exclude_files=doc
+
+# The root directories are specified relative to CPPLINT.cfg dir
+root=
+
+# The header extensions
+headers=
+
+# rule.1
+# Naming rules for file names
+# 1: pure lowercase, 2: lowercase +_, 3: lowercase + digit +_, 4: upper case, 5: upper case + digit +_
+# default: 3
+lint_file_naming=
+
+# rule.2
+# Whether copyright is required at the beginning of the file
+# start of file
+# -1: forbidden, 0: indifferent, 1: required
+# default: 1
+lint_copyright_sof=
+
+# rule.3
+# Whether a new line is required at the end of the file
+# end of file
+# -1: forbidden, 0: indifferent, 1: required
+# default: 1
+lint_newline_eof=
+
+# rule.4
+# Whether to allow TAB
+# -1: forbidden, 0: indifferent, 1: allowed
+# default: -1
+lint_use_tab=
+
+# rule.5
+# The code line length
+# 0: indifferent, >0: length
+# default: 120
+lint_line_length=
+
+# rule.6
+# The number of lines in the function body
+# 0: indifferent, >0: length
+# default: 80
+lint_function_line=
+
+# rule.7
+# Number of Spaces to indent code.
+# 0: indifferent, >0: length
+# default: 4
+lint_space_indent=
+
+# rule.8
+# Whether extra space at the end of a line is allowed
+# -1: forbidden, 0: indifferent, 1: allowed
+# default: -1
+lint_space_eol=
+
+# rule.9
+# Whether to allow multiple instructions in a row
+# -1: forbidden, 0: indifferent, 1: allowed
+# default: -1
+lint_multiple_cmd=
+
+# rule.10
+# Whether blocks of code are required to use curly braces
+# -1: forbidden, 0: indifferent, 1: required
+# default: 1
+lint_block_braces=
+
+# rule.11
+# Whether to leave a space before or after the keyword
+# -1: forbidden, 0: indifferent, 1: required
+# default: 1
+lint_space_keyword=
+
+# rule.12
+# Whether to require 1 space before and after the operator
+# -1: forbidden, 0: indifferent, 1: required
+# default: 1
+lint_space_operator=
+
+# rule.13
+# Whether to ask preprocessor keyword '#include/# define' thus
+# 0: indifferent, 1: required
+# default: 1
+lint_include_thus=
+
+# rule.14
+# For preprocessor keyword '#/if/#elif/#ifdef/#ifndef/#endif' thus
+# -1: forbidden, 0: indifferent, 1: required
+# default: 1
+lint_if_thus=
+
+# rule.15
+# Code Style selection
+# 1. K&R
+# if () {
+#     a = b;
+# }
+# 2. Allman
+# if ()
+# {
+#     a = b;
+# }
+# 3. Whitesmiths
+# if ()
+#     {
+#     a = b;
+#     }
+# 4. GNU
+# if ()
+#     {
+#         a = b;
+#     }
+# default: 1
+lint_code_style=
+
+# rule.16
+# Function and variable names are lowercase +_
+# 0: indifferent, 1: required
+# default: 1
+lint_user_naming=
+
+# rule.17
+# Macro naming rules
+# 0: indifferent, 1: uppercase +_, 2: uppercase + number +_
+# default: 1
+lint_macro_naming=
+
+# rule.18
+# Enum naming rules
+# 0: indifferent, 1: uppercase +_, 2: uppercase + number +_
+# default: 1
+lint_enum_naming=
+
+# rule.19
+# Whether devil numbers are allowed
+# -1: forbidden, 0: indifferent, 1: allowed
+# default: -1
+lint_devil_numbers=
+
+# rule.20
+# Comment style selection
+# 0: indifferent, 1: //, 2: /**/
+# default: 0
+lint_comment_style=
+
+# rule.21
+# Whether more than one consecutive blank line is allowed
+# -1: forbidden, 0: indifferent, 1: allowed
+# default: -1
+lint_blank_line=
+
+"""
+
 # We categorize each error message we print.  Here are the categories.
 # We want an explicit list so we can list them all in cpplint --filter=.
 # If you add a new error message with a new category, add it to the list
@@ -877,6 +1047,48 @@ class _CppLintState(object):
     # "emacs" - format that emacs can parse (default)
     # "vs7" - format that Microsoft Visual Studio 7 can parse
     self.output_format = 'emacs'
+
+    # smart rule
+    # rule.1: file naming use lower + digit + _
+    self.lint_file_naming = 3
+    # rule.2: required copyright
+    self.lint_copyright_sof = 1
+    # rule.3: required a new line at the end of the file
+    self.lint_newline_eof = 1
+    # rule.4: forbidden use TAB
+    self.lint_use_tab = -1
+    # rule.5: code line length
+    self.lint_line_length = 120
+    # rule.6: function body length
+    self.lint_function_line = 80
+    # rule.8: forbidden extra space at the end of a line
+    self.lint_space_eol = -1
+    # rule.9: forbidden multi command in a row
+    self.lint_multiple_cmd = -1
+    # rule.10: required use brace for code blocks
+    self.lint_block_braces = 1
+    # rule.11: leave a space around keyword
+    self.lint_space_keyword = 1
+    # rule.12: leave a space around operator
+    self.lint_space_operator = 1
+    # rule.13: '#include/#define' required thus
+    self.lint_include_thus = 1
+    # rule.14: '#/if/#elif/#ifdef/#ifndef/#endif' required thus
+    self.lint_if_thus =1
+    # rule.15: style use K&R
+    self.lint_code_style = 1
+    # rule.16: function and variable names are lowercase +_
+    self.lint_user_naming = 1
+    # rule.17: macro naming use uppercase + _
+    self.lint_macro_naming = 1
+    # rule.18: enum naming use uppercase + _
+    self.lint_enum_naming = 1
+    # rule.19: forbidden use devil numbers
+    self.lint_devil_numbers = -1
+    # rule.20: comment style use '//' & '/**/'
+    self.lint_comment_style = 0
+    # rule.21: forbidden leave multi blank line
+    self.lint_blank_line = -1
 
   def SetOutputFormat(self, output_format):
     """Sets the output format for errors."""
@@ -6049,46 +6261,61 @@ def ProcessConfigOverrides(filename):
             _root = os.path.join(os.path.dirname(cfg_file), val)
           elif name == 'headers':
             ProcessHppHeadersOption(val)
-          elif name == 'lint_file_naming':
-            print("name: %s, value = %s" % (name, val))
-          elif name == 'lint_copyright_sof':
-            print("name: %s, value = %s" % (name, val))
-          elif name == 'lint_newline_eof':
-            print("name: %s, value = %s" % (name, val))
-          elif name == 'lint_use_tab':
-            print("name: %s, value = %s" % (name, val))
-          elif name == 'lint_line_length':
-            print("name: %s, value = %s" % (name, val))
-          elif name == 'lint_function_line':
-            print("name: %s, value = %s" % (name, val))
-          elif name == 'lint_space_indent':
-            print("name: %s, value = %s" % (name, val))
-          elif name == 'lint_space_eol':
-            print("name: %s, value = %s" % (name, val))
-          elif name == 'lint_multiple_cmd':
-            print("name: %s, value = %s" % (name, val))
-          elif name == 'lint_block_braces':
-            print("name: %s, value = %s" % (name, val))
-          elif name == 'lint_space_keyword':
-            print("name: %s, value = %s" % (name, val))
-          elif name == 'lint_space_operator':
-            print("name: %s, value = %s" % (name, val))
-          elif name == 'lint_include_thus':
-            print("name: %s, value = %s" % (name, val))
-          elif name == 'lint_if_thus':
-            print("name: %s, value = %s" % (name, val))
-          elif name == 'lint_code_style':
-            print("name: %s, value = %s" % (name, val))
-          elif name == 'lint_user_naming':
-            print("name: %s, value = %s" % (name, val))
-          elif name == 'lint_macro_uppercase':
-            print("name: %s, value = %s" % (name, val))
-          elif name == 'lint_devil_numbers':
-            print("name: %s, value = %s" % (name, val))
-          elif name == 'lint_comment_style':
-            print("name: %s, value = %s" % (name, val))
-          elif name == 'lint_blank_line':
-            print("name: %s, value = %s" % (name, val))
+          elif re.match(r'^lint', name):
+            if val.strip() == '':
+              print "Input is null. Default values will be used for rule options."
+              continue
+
+            try:
+              int(val)
+            except ValueError:
+              sys.stderr.write('Rules option must be numeric.\n')
+              sys.stderr.write("name: %s, value = %s\n" % (name, val))
+              continue
+
+            if name == 'lint_file_naming':
+              print("name: %s, value = %s" % (name, val))
+            elif name == 'lint_copyright_sof':
+              print("name: %s, value = %s" % (name, val))
+            elif name == 'lint_newline_eof':
+              print("name: %s, value = %s" % (name, val))
+            elif name == 'lint_use_tab':
+              print("name: %s, value = %s" % (name, val))
+            elif name == 'lint_line_length':
+              print("name: %s, value = %s" % (name, val))
+              _line_length = int(val)
+            elif name == 'lint_function_line':
+              print("name: %s, value = %s" % (name, val))
+            elif name == 'lint_space_indent':
+              print("name: %s, value = %s" % (name, val))
+            elif name == 'lint_space_eol':
+              print("name: %s, value = %s" % (name, val))
+            elif name == 'lint_multiple_cmd':
+              print("name: %s, value = %s" % (name, val))
+            elif name == 'lint_block_braces':
+              print("name: %s, value = %s" % (name, val))
+            elif name == 'lint_space_keyword':
+              print("name: %s, value = %s" % (name, val))
+            elif name == 'lint_space_operator':
+              print("name: %s, value = %s" % (name, val))
+            elif name == 'lint_include_thus':
+              print("name: %s, value = %s" % (name, val))
+            elif name == 'lint_if_thus':
+              print("name: %s, value = %s" % (name, val))
+            elif name == 'lint_code_style':
+              print("name: %s, value = %s" % (name, val))
+            elif name == 'lint_user_naming':
+              print("name: %s, value = %s" % (name, val))
+            elif name == 'lint_macro_naming':
+              print("name: %s, value = %s" % (name, val))
+            elif name == 'lint_enum_naming':
+              print("name: %s, value = %s" % (name, val))
+            elif name == 'lint_devil_numbers':
+              print("name: %s, value = %s" % (name, val))
+            elif name == 'lint_comment_style':
+              print("name: %s, value = %s" % (name, val))
+            elif name == 'lint_blank_line':
+              print("name: %s, value = %s" % (name, val))
           else:
             sys.stderr.write(
                 'Invalid configuration option (%s) in file %s\n' %
@@ -6219,6 +6446,11 @@ def PrintUsage(message):
   else:
     sys.exit(1)
 
+def GenerateLintCfg():
+  f = open('LINT.cfg', 'w+')
+  f.write(_LINTCFG)
+  f.close()
+
 
 def PrintCategories():
   """Prints a list of all the error-categories used by error messages.
@@ -6249,6 +6481,7 @@ def ParseArguments(args):
                                                  'extensions=',
                                                  'headers=',
                                                  'quiet',
+                                                 'generate',
                                                  'about'])
   except getopt.GetoptError:
     PrintUsage('Invalid arguments.')
@@ -6295,10 +6528,14 @@ def ParseArguments(args):
           PrintUsage('Extensions must be comma separated list.')
     elif opt == '--headers':
       ProcessHppHeadersOption(val)
+    elif opt == '--generate':
+      GenerateLintCfg()
+      sys.stdout.write("The LINT.cfg configuration file is generated successfully.")
+      sys.exit(0)
     elif opt == '--about':
-      print("Version:0.1")
-      print("Release:2022-02-21")
-      print("Contact:skull.gu@gmail.com")
+      sys.stdout.write("Version: 0.1\n")
+      sys.stdout.write("Release: 2022-02-21\n")
+      sys.stdout.write("Contact: skull.gu@gmail.com\n")
       sys.exit(0)
 
   if not filenames:
