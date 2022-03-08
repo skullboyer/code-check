@@ -221,7 +221,7 @@ headers=
 
 # rule.1
 # Naming rules for file names
-# 1: pure lowercase, 2: lowercase +_, 3: lowercase + digit +_, 4: upper case, 5: upper case + digit +_
+# 0: indifferent, 1: pure lowercase, 2: lowercase +_, 3: lowercase + digit +_, 4: uppercase, 5: uppercase + digit +_
 # default: 3
 lint_file_naming=
 
@@ -6392,7 +6392,7 @@ def ProcessConfigOverrides(filename):
             ProcessHppHeadersOption(val)
           elif re.match(r'^lint', name):
             if val.strip() == '':
-              print "Input is null. Default values will be used for rule options."
+              sys.stdout.write("Input is null. Default values will be used for rule options.\n")
               continue
 
             try:
@@ -6464,11 +6464,27 @@ def ProcessConfigOverrides(filename):
 
 # @skull.
 def CheckFileName(filename, error):
-  file_delete_extension = filename[filename.rfind('/') + 1:filename.rfind('.')]
-  # print(file_delete_extension)  
-  if Search(r'[^a-z_0-9]', file_delete_extension):
-    error(filename, "name", 'build/filename', 4,
-          'The file name consists of lowercase letters, digits, and underscores')
+  if FileNaming() > 0:
+    file_delete_extension = filename[filename.rfind('/') + 1:filename.rfind('.')]
+    # print(file_delete_extension)
+    if FileNaming() == 1:
+      _RE_PATTERN_FILE_NAMING = re.compile(r'[^a-z]')
+      ERROR_MESSAGE = "The file name consists of lowercase letters."
+    elif FileNaming() == 2:
+      _RE_PATTERN_FILE_NAMING = re.compile(r'[^a-z_]')
+      ERROR_MESSAGE = "The file name consists of lowercase letters, and underscores."
+    elif FileNaming() == 3:
+      _RE_PATTERN_FILE_NAMING = re.compile(r'[^a-z_0-9]')
+      ERROR_MESSAGE = "The file name consists of lowercase letters, digits, and underscores."
+    elif FileNaming() == 4:
+      _RE_PATTERN_FILE_NAMING = re.compile(r'[^A-Z]')
+      ERROR_MESSAGE = "The file name consists of uppercase letters."
+    elif FileNaming() == 5:
+      _RE_PATTERN_FILE_NAMING = re.compile(r'[^A-Z_0-9]')
+      ERROR_MESSAGE = "The file name consists of uppercase letters, digits, and underscores."
+
+    if _RE_PATTERN_FILE_NAMING.search(file_delete_extension):
+      error(filename, "name", 'build/filename', 4, ERROR_MESSAGE)
 
 def ProcessFile(filename, vlevel, extra_check_functions=[]):
   """Does google-lint on a single file.
