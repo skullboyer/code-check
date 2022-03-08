@@ -2097,14 +2097,20 @@ def ReverseCloseExpression(clean_lines, linenum, pos):
 def CheckForCopyright(filename, lines, error):
   """Logs an error if no Copyright message appears at the top of the file."""
 
-  # We'll say it should occur by line 10. Don't forget there's a
-  # placeholder line at the front.
-  for line in xrange(1, min(len(lines), 11)):
-    if re.search(r'Copyright', lines[line], re.I): break
-  else:                       # means no copyright line was found
-    error(filename, 0, 'legal/copyright', 5,
-          'No copyright message found.  '
-          'You should have a line: "Copyright [year] <Copyright Owner>"')
+  if Copyright() != 0:
+    # We'll say it should occur by line 10. Don't forget there's a
+    # placeholder line at the front.
+    for line in xrange(1, min(len(lines), 11)):
+      if re.search(r'Copyright', lines[line], re.I):
+        if Copyright() == -1:
+          error(filename, line, 'legal/copyright', 5,
+                'Copyright message found. You should delete copyright information.')
+        break
+    else:                       # means no copyright line was found
+      if Copyright() == 1:
+        error(filename, 0, 'legal/copyright', 5,
+              'No copyright message found.  '
+              'You should have a line: "Copyright [year] <Copyright Owner>"')
 
 
 def GetIndentLevel(line):
@@ -6392,7 +6398,7 @@ def ProcessConfigOverrides(filename):
             ProcessHppHeadersOption(val)
           elif re.match(r'^lint', name):
             if val.strip() == '':
-              sys.stdout.write("Input is null. Default values will be used for rule options.\n")
+              sys.stdout.write("[%s]  Configuration is empty. Default values will be used for rule options.\n" % name)
               continue
 
             try:
