@@ -1061,6 +1061,8 @@ class _CppLintState(object):
     self.lint_line_length = 120
     # rule.6: function body length
     self.lint_function_line = 80
+    # rule.7: space indent
+    self.lint_space_indent = 4
     # rule.8: forbidden extra space at the end of a line
     self.lint_space_eol = -1
     # rule.9: forbidden multi command in a row
@@ -1241,6 +1243,133 @@ def _BackupFilters():
 def _RestoreFilters():
   """ Restores filters previously backed up."""
   _cpplint_state.RestoreFilters()
+
+def SetFileNaming(naming):
+  _cpplint_state.lint_file_naming = naming
+
+def FileNaming():
+  return _cpplint_state.lint_file_naming
+
+def SetCopyright(copyright):
+  _cpplint_state.lint_copyright_sof = copyright
+
+def Copyright():
+  return _cpplint_state.lint_copyright_sof
+
+def SetNewLine(newline):
+  _cpplint_state.lint_newline_eof = newline
+
+def NewLine():
+  return _cpplint_state.lint_newline_eof
+
+def SetUseTab(tab):
+  _cpplint_state.lint_use_tab = tab
+
+def UseTab():
+  return _cpplint_state.lint_use_tab
+
+def SetLineLength(length):
+  _cpplint_state.lint_line_length = length
+
+def LineLength():
+  return _cpplint_state.lint_line_length
+
+def SetFunctionLine(length):
+  _cpplint_state.lint_function_line = length
+
+def FunctionLine():
+  return _cpplint_state.lint_function_line
+
+def SetSpaceIndent(indent):
+  _cpplint_state.lint_space_indent = indent
+
+def SpaceIndent():
+  return _cpplint_state.lint_space_indent
+
+def SetSpaceEnd(space):
+  _cpplint_state.lint_space_eol = space
+
+def SpaceEnd():
+  return _cpplint_state.lint_space_eol
+
+def SetMultipleCommand(multi):
+  _cpplint_state.lint_multiple_cmd = multi
+
+def MultipleCommand():
+  return _cpplint_state.lint_multiple_cmd
+
+def SetBlockBraces(brace):
+  _cpplint_state.lint_block_braces = brace
+
+def BlockBraces():
+  return _cpplint_state.lint_block_braces
+
+def SetSpaceKeyword(space):
+  _cpplint_state.lint_space_keyword = space
+
+def SpaceKeyword():
+  return _cpplint_state.lint_space_keyword
+
+def SetSpaceOperator(space):
+  _cpplint_state.lint_space_operator = space
+
+def SpaceOperator():
+  return _cpplint_state.lint_space_operator
+
+def SetIncludeThus(thus):
+  _cpplint_state.lint_include_thus = thus
+
+def IncludeThus():
+  return _cpplint_state.lint_include_thus
+
+def SetIfThus(thus):
+  _cpplint_state.lint_if_thus = thus
+
+def IfThus():
+  return _cpplint_state.lint_if_thus
+
+def SetCodeStyle(style):
+  _cpplint_state.lint_code_style = style
+
+def CodeStyle():
+  return _cpplint_state.lint_code_style
+
+def SetUserNaming(naming):
+  _cpplint_state.lint_user_naming = naming
+
+def UserNaming():
+  return _cpplint_state.lint_user_naming
+
+def SetMacroNaming(naming):
+  _cpplint_state.lint_macro_naming = naming
+
+def MacroNaming():
+  return _cpplint_state.lint_macro_naming
+
+def SetEnumNaming(naming):
+  _cpplint_state.lint_enum_naming = naming
+
+def EnumNaming():
+  return _cpplint_state.lint_enum_naming
+
+def SetDevilNumber(devil):
+  _cpplint_state.lint_devil_numbers = devil
+
+def DevilNumber():
+  return _cpplint_state.lint_devil_numbers
+
+def SetCommentStyle(style):
+  _cpplint_state.lint_comment_style = style
+
+def CommentStyle():
+  return _cpplint_state.lint_comment_style
+
+def SetBlankLine(blank):
+  _cpplint_state.lint_blank_line = blank
+
+def BlankLine():
+  return _cpplint_state.lint_blank_line
+
 
 class _FunctionState(object):
   """Tracks current function name and the number of lines in its body."""
@@ -6274,48 +6403,48 @@ def ProcessConfigOverrides(filename):
               continue
 
             if name == 'lint_file_naming':
-              print("name: %s, value = %s" % (name, val))
+              SetFileNaming(int(val));
             elif name == 'lint_copyright_sof':
-              print("name: %s, value = %s" % (name, val))
+              SetCopyright(int(val));
             elif name == 'lint_newline_eof':
-              print("name: %s, value = %s" % (name, val))
+              SetNewLine(int(val));
             elif name == 'lint_use_tab':
-              print("name: %s, value = %s" % (name, val))
+              SetUseTab(int(val));
             elif name == 'lint_line_length':
-              print("name: %s, value = %s" % (name, val))
+              SetLineLength(int(val));
               _line_length = int(val)
             elif name == 'lint_function_line':
-              print("name: %s, value = %s" % (name, val))
+              SetFunctionLine(int(val));
             elif name == 'lint_space_indent':
-              print("name: %s, value = %s" % (name, val))
+              SetSpaceIndent(int(val));
             elif name == 'lint_space_eol':
-              print("name: %s, value = %s" % (name, val))
+              SetSpaceEnd(int(val));
             elif name == 'lint_multiple_cmd':
-              print("name: %s, value = %s" % (name, val))
+              SetMultipleCommand(int(val));
             elif name == 'lint_block_braces':
-              print("name: %s, value = %s" % (name, val))
+              SetBlockBraces(int(val));
             elif name == 'lint_space_keyword':
-              print("name: %s, value = %s" % (name, val))
+              SetSpaceKeyword(int(val));
             elif name == 'lint_space_operator':
-              print("name: %s, value = %s" % (name, val))
+              SetSpaceOperator(int(val));
             elif name == 'lint_include_thus':
-              print("name: %s, value = %s" % (name, val))
+              SetIncludeThus(int(val));
             elif name == 'lint_if_thus':
-              print("name: %s, value = %s" % (name, val))
+              SetIfThus(int(val));
             elif name == 'lint_code_style':
-              print("name: %s, value = %s" % (name, val))
+              SetCodeStyle(int(val));
             elif name == 'lint_user_naming':
-              print("name: %s, value = %s" % (name, val))
+              SetUserNaming(int(val));
             elif name == 'lint_macro_naming':
-              print("name: %s, value = %s" % (name, val))
+              SetMacroNaming(int(val));
             elif name == 'lint_enum_naming':
-              print("name: %s, value = %s" % (name, val))
+              SetEnumNaming(int(val));
             elif name == 'lint_devil_numbers':
-              print("name: %s, value = %s" % (name, val))
+              SetDevilNumber(int(val));
             elif name == 'lint_comment_style':
-              print("name: %s, value = %s" % (name, val))
+              SetCommentStyle(int(val));
             elif name == 'lint_blank_line':
-              print("name: %s, value = %s" % (name, val))
+              SetBlankLine(int(val));
           else:
             sys.stderr.write(
                 'Invalid configuration option (%s) in file %s\n' %
