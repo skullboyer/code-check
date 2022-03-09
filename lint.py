@@ -1412,7 +1412,9 @@ class _FunctionState(object):
       base_trigger = self._TEST_TRIGGER
     else:
       base_trigger = self._NORMAL_TRIGGER
-    trigger = base_trigger * 2**_VerboseLevel()
+    # trigger = base_trigger * 2**_VerboseLevel()
+    trigger = FunctionLine()
+    base_trigger = trigger
 
     if self.lines_in_function > trigger:
       error_level = int(math.log(self.lines_in_function / base_trigger, 2))
@@ -4778,14 +4780,15 @@ def CheckStyle(filename, clean_lines, linenum, file_extension, nesting_state,
   #
   # The "$Id:...$" comment may also get very long without it being the
   # developers fault.
-  if (not line.startswith('#include') and not is_header_guard and
-      not Match(r'^\s*//.*http(s?)://\S*$', line) and
-      not Match(r'^\s*//\s*[^\s]*$', line) and
-      not Match(r'^// \$Id:.*#[0-9]+ \$$', line)):
-    line_width = GetLineWidth(line)
-    if line_width > _line_length:
-      error(filename, linenum, 'whitespace/line_length', 2,
-            'Lines should be <= %i characters long' % _line_length)
+  if LineLength() != 0:
+    if (not line.startswith('#include') and not is_header_guard and
+        not Match(r'^\s*//.*http(s?)://\S*$', line) and
+        not Match(r'^\s*//\s*[^\s]*$', line) and
+        not Match(r'^// \$Id:.*#[0-9]+ \$$', line)):
+      line_width = GetLineWidth(line)
+      if line_width > _line_length:
+        error(filename, linenum, 'whitespace/line_length', 2,
+              'Lines should be <= %i characters long' % _line_length)
 
   if (cleansed_line.count(';') > 1 and
       # for loops are allowed two ;'s (and may run over two lines).
