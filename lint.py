@@ -2390,10 +2390,15 @@ def CheckForNewlineAtEOF(filename, lines, error):
   # original file (go figure), then splitting on \n.
   # To verify that the file ends in \n, we just have to make sure the
   # last-but-two element of lines() exists and is empty.
-  if len(lines) < 3 or lines[-2]:
-    error(filename, len(lines) - 2, 'whitespace/ending_newline', 5,
-          'Could not find a newline character at the end of the file.')
-
+  if NewLine() != 0:
+    if NewLine() == 1:
+      if len(lines) < 3 or lines[-2]:
+        error(filename, len(lines) - 2, 'whitespace/ending_newline', 5,
+              'Could not find a newline character at the end of the file.')
+    elif NewLine() == -1:
+      if not lines[-2]:
+        error(filename, len(lines) - 2, 'whitespace/ending_newline', 5,
+              'Find a newline character at the end of the file. Please delete!')
 
 def CheckForMultilineCommentsAndStrings(filename, clean_lines, linenum, error):
   """Logs an error if we see /* ... */ or "..." that extend past one line.
