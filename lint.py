@@ -240,8 +240,8 @@ lint_copyright_sof=
 lint_newline_eof=
 
 # rule.4
-# Whether to allow TAB
-# -1: forbidden, 0: indifferent, 1: allowed
+# Whether to disable TAB
+# -1: forbidden, 0: indifferent
 # default: -1
 lint_use_tab=
 
@@ -4716,9 +4716,9 @@ def CheckStyle(filename, clean_lines, linenum, file_extension, nesting_state,
   line = raw_lines[linenum]
   prev = raw_lines[linenum - 1] if linenum > 0 else ''
 
-  if line.find('\t') != -1:
-    error(filename, linenum, 'whitespace/tab', 1,
-          'Tab found; better to use spaces')
+  if UseTab() == -1:
+    if line.find('\t') != -1:
+      error(filename, linenum, 'whitespace/tab', 1, 'Tab found; better to use spaces')
 
   # One or three blank spaces at the beginning of the line is weird; it's
   # hard to reconcile that with 2-space indents.
