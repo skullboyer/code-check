@@ -3776,11 +3776,19 @@ def CheckParenthesisSpacing(filename, clean_lines, linenum, error):
   """
   line = clean_lines.elided[linenum]
 
-  # No spaces after an if, while, switch, or for
-  match = Search(r' (if\(|for\(|while\(|switch\()', line)
-  if match:
-    error(filename, linenum, 'whitespace/parens', 5,
-          'Missing space before ( in %s' % match.group(1))
+  if SpaceKeyword() != 0:
+    if SpaceKeyword() == 1:
+      # No spaces after an if, while, switch, or for
+      match = Search(r' (if\(|for\(|while\(|switch\()', line)
+      if match:
+        error(filename, linenum, 'whitespace/parens', 5,
+              'Missing space before ( in %s' % match.group(1))
+    if SpaceKeyword() == -1:
+      # Have spaces after an if, while, switch, or for
+      match = Search(r' (if\s+\(|for\s+\(|while\s+\(|switch\s+\()', line)
+      if match:
+        error(filename, linenum, 'whitespace/parens', 5,
+              'Extra spaces appear before ( in %s' % match.group(1))
 
   # For if/for/while/switch, the left and right parens should be
   # consistent about how many spaces are inside the parens, and
