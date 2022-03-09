@@ -265,13 +265,13 @@ lint_space_indent=
 
 # rule.8
 # Whether extra space at the end of a line is allowed
-# -1: forbidden, 0: indifferent, 1: allowed
+# -1: forbidden, 0: indifferent
 # default: -1
 lint_space_eol=
 
 # rule.9
 # Whether to allow multiple instructions in a row
-# -1: forbidden, 0: indifferent, 1: allowed
+# -1: forbidden, 0: indifferent
 # default: -1
 lint_multiple_cmd=
 
@@ -4752,17 +4752,17 @@ def CheckStyle(filename, clean_lines, linenum, file_extension, nesting_state,
   # (of lines ending in double quotes, commas, equals, or angle brackets)
   # because the rules for how to indent those are non-trivial.
   # @skull.
-  if (not Search(r'[",=><] *$', prev) and
-      (initial_spaces % 4 != 0) and
-      not Match(scope_or_label_pattern, cleansed_line) and
-      not (clean_lines.raw_lines[linenum] != line and
-           Match(r'^\s*""', line))):
-    error(filename, linenum, 'whitespace/indent', 3,
-          'Weird number of spaces at line-start.  Are you using a 4-space indent?')
+  if SpaceIndent() != 0:
+    if (not Search(r'[",=><] *$', prev) and (initial_spaces % SpaceIndent() != 0) and
+        not Match(scope_or_label_pattern, cleansed_line) and not (clean_lines.raw_lines[linenum] != line and
+        Match(r'^\s*""', line))):
+      error(filename, linenum, 'whitespace/indent', 3,
+            'Weird number of spaces at line-start.  Are you using a %d-space indent?' % SpaceIndent())
 
-  if line and line[-1].isspace():
-    error(filename, linenum, 'whitespace/end_of_line', 4,
-          'Line ends in whitespace.  Consider deleting these extra spaces.')
+  if SpaceEnd() == -1:
+    if line and line[-1].isspace():
+      error(filename, linenum, 'whitespace/end_of_line', 4,
+            'Line ends in whitespace.  Consider deleting these extra spaces.')
 
   # Check if the line is a header guard.
   is_header_guard = False
@@ -4790,17 +4790,16 @@ def CheckStyle(filename, clean_lines, linenum, file_extension, nesting_state,
         error(filename, linenum, 'whitespace/line_length', 2,
               'Lines should be <= %i characters long' % _line_length)
 
-  if (cleansed_line.count(';') > 1 and
-      # for loops are allowed two ;'s (and may run over two lines).
-      cleansed_line.find('for') == -1 and
-      (GetPreviousNonBlankLine(clean_lines, linenum)[0].find('for') == -1 or
-       GetPreviousNonBlankLine(clean_lines, linenum)[0].find(';') != -1) and
-      # It's ok to have many commands in a switch case that fits in 1 line
-      not ((cleansed_line.find('case ') != -1 or
-            cleansed_line.find('default:') != -1) and
-           cleansed_line.find('break;') != -1)):
-    error(filename, linenum, 'whitespace/newline', 0,
-          'More than one command on the same line')
+  if MultipleCommand() == -1:
+    if (cleansed_line.count(';') > 1 and
+        # for loops are allowed two ;'s (and may run over two lines).
+        cleansed_line.find('for') == -1 and
+        (GetPreviousNonBlankLine(clean_lines, linenum)[0].find('for') == -1 or
+         GetPreviousNonBlankLine(clean_lines, linenum)[0].find(';') != -1) and
+        # It's ok to have many commands in a switch case that fits in 1 line
+        not ((cleansed_line.find('case ') != -1 or cleansed_line.find('default:') != -1) and
+             cleansed_line.find('break;') != -1)):
+      error(filename, linenum, 'whitespace/newline', 0, 'More than one command on the same line')
 
   # Some more style checks
   CheckBraces(filename, clean_lines, linenum, error)
