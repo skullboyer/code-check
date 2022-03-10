@@ -4693,7 +4693,7 @@ def GetLineWidth(line):
 # @skull.
 def CheckDevilFigure(filename, cleansed_line, line, prev_line, linenum, error):
   if DevilNumber() == -1:
-    if Search(r' (=|==)\s*[1-9|0x]', cleansed_line):
+    if Search(r' (=|==)\s*([1-9]|(0x))', cleansed_line):
       if not Match(r'^\s+(/\*|//)', prev_line) and not Match(r'^.*(/\*|//)', line):
         error(filename, linenum, 'build/devil', 3, 'This is probably using devil figure')
 
