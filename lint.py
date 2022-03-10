@@ -294,16 +294,16 @@ lint_space_keyword=
 lint_space_operator=
 
 # rule.13
-# Whether to ask preprocessor keyword '#include/# define' thus
+# Whether to ask preprocessor keyword '#include|#define|if|#elif|#ifdef|#ifndef|#endif' thus
 # 0: indifferent, 1: required
 # default: 1
-lint_include_thus=
+lint_preprocess_thus=
 
 # rule.14
-# For preprocessor keyword '#/if/#elif/#ifdef/#ifndef/#endif' thus
-# -1: forbidden, 0: indifferent, 1: required
-# default: 1
-lint_if_thus=
+# For preprocessor keyword '#include|#define|if|#elif|#ifdef|#ifndef|#endif' allow space after '#'
+# -1: forbidden, 0: indifferent
+# default: -1
+lint_preprocess_space=
 
 # rule.15
 # Code Style selection
@@ -1073,10 +1073,10 @@ class _CppLintState(object):
     self.lint_space_keyword = 1
     # rule.12: leave a space around operator
     self.lint_space_operator = 1
-    # rule.13: '#include/#define' required thus
-    self.lint_include_thus = 1
-    # rule.14: '#/if/#elif/#ifdef/#ifndef/#endif' required thus
-    self.lint_if_thus =1
+    # rule.13: '#include/#define/#if/#elif/#ifdef/#ifndef/#endif' required thus
+    self.lint_preprocess_thus = 1
+    # rule.14: '#include/#define/#if/#elif/#ifdef/#ifndef/#endif' forbidden space
+    self.lint_preprocess_space = -1
     # rule.15: style use K&R
     self.lint_code_style = 1
     # rule.16: function and variable names are lowercase +_
@@ -1316,17 +1316,17 @@ def SetSpaceOperator(space):
 def SpaceOperator():
   return _cpplint_state.lint_space_operator
 
-def SetIncludeThus(thus):
-  _cpplint_state.lint_include_thus = thus
+def SetPreprocessThus(thus):
+  _cpplint_state.lint_preprocess_thus = thus
 
-def IncludeThus():
-  return _cpplint_state.lint_include_thus
+def PreprocessThus():
+  return _cpplint_state.lint_preprocess_thus
 
-def SetIfThus(thus):
-  _cpplint_state.lint_if_thus = thus
+def SetPreprocessSpace(space):
+  _cpplint_state.lint_preprocess_space = space
 
-def IfThus():
-  return _cpplint_state.lint_if_thus
+def PreprocessSpace():
+  return _cpplint_state.lint_preprocess_space
 
 def SetCodeStyle(style):
   _cpplint_state.lint_code_style = style
@@ -4693,9 +4693,15 @@ def CheckMarcoUppercase(filename, linenum, cleansed_line, error):
 
 # @skull.
 def CheckPreprocessWhitespace(filename, linenum, cleansed_line, error):
-  if Match(r'^\s+#', cleansed_line):
-    error(filename, linenum, 'whitespace/preprocess', 4,
-          'Preprocessor directives are not allowed to start with Spaces')
+  if PreprocessThus() == 1:
+    if Match(r'^\s+#', cleansed_line):
+      error(filename, linenum, 'whitespace/preprocess', 4,
+            'Preprocessor directives are not allowed to start with Spaces')
+
+  if PreprocessSpace() == -1:
+    if Match(r'^\s*#\s+', cleansed_line):
+      error(filename, linenum, 'whitespace/preprocess', 4,
+            'Disable Spaces after # in preprocessor instructions')
 
   if Match(r'(#include|#define)\s{2,}', cleansed_line):
     error(filename, linenum, 'whitespace/preprocess', 4,
@@ -6449,9 +6455,9 @@ def ProcessConfigOverrides(filename):
             elif name == 'lint_space_operator':
               SetSpaceOperator(int(val));
             elif name == 'lint_include_thus':
-              SetIncludeThus(int(val));
+              SetPreprocessThus(int(val));
             elif name == 'lint_if_thus':
-              SetIfThus(int(val));
+              SetPreprocessSpace(int(val));
             elif name == 'lint_code_style':
               SetCodeStyle(int(val));
             elif name == 'lint_user_naming':
