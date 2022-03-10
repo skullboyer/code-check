@@ -349,7 +349,7 @@ lint_enum_naming=
 
 # rule.19
 # Whether devil numbers are allowed
-# -1: forbidden, 0: indifferent, 1: allowed
+# -1: forbidden, 0: indifferent
 # default: -1
 lint_devil_numbers=
 
@@ -4679,10 +4679,10 @@ def GetLineWidth(line):
 
 # @skull.
 def CheckDevilFigure(filename, cleansed_line, line, prev_line, linenum, error):
-  # if Search(r' = \d', cleansed_line):
-  if Search(r' = [1-9]', cleansed_line):
-    if not Match(r'^\s+(/\*|//)', prev_line) and not Match(r'^.*(/\*|//)', line):
-      error(filename, linenum, 'build/devil', 3, 'This is probably using devil figure')
+  if DevilNumber() == -1:
+    if Search(r' = [1-9]', cleansed_line):
+      if not Match(r'^\s+(/\*|//)', prev_line) and not Match(r'^.*(/\*|//)', line):
+        error(filename, linenum, 'build/devil', 3, 'This is probably using devil figure')
 
 # @skull.
 def CheckMarcoUppercase(filename, linenum, cleansed_line, error):
