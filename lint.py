@@ -744,6 +744,13 @@ _hpp_headers = set(['h'])
 # category should be suppressed for every line.
 _global_error_suppressions = {}
 
+
+def CountLineHeadSpaces(line):
+  initial_spaces = 0
+  while initial_spaces < len(line) and line[initial_spaces] == ' ':
+    initial_spaces += 1
+  return initial_spaces
+
 def ProcessHppHeadersOption(val):
   global _hpp_headers
   try:
@@ -4107,7 +4114,6 @@ def GetPreviousNonBlankLine(clean_lines, linenum):
     prevlinenum -= 1
   return ('', -1)
 
-
 def CheckBraces(filename, clean_lines, linenum, error):
   """Looks for misplaced braces (e.g. at the end of line).
 
@@ -4132,21 +4138,40 @@ def CheckBraces(filename, clean_lines, linenum, error):
     # within the 80 character limit of the preceding line.
     # @skull.
     prevline = GetPreviousNonBlankLine(clean_lines, linenum)[0]
-    if (not Search(r'[,;:}{(]\s*$', prevline) and
-        not Match(r'\s*#', prevline) and
-        not Match(r'(\w(\w|::|\*|\&|\s)*)\(', prevline) and
-        not (GetLineWidth(prevline) > _line_length - 2 and '[]' in prevline)):
-      error(filename, linenum, 'whitespace/braces', 4,
-            '{ should almost always be at the end of the previous line')
+    if CodeStyle() == 1:
+      if (not Search(r'[,;:}{(]\s*$', prevline) and
+          not Match(r'\s*#', prevline) and
+          not Match(r'(\w(\w|::|\*|\&|\s)*)\(', prevline) and
+          not (GetLineWidth(prevline) > _line_length - 2 and '[]' in prevline)):
+        error(filename, linenum, 'whitespace/braces', 4,
+              '{ should almost always be at the end of the previous line')
+    elif CodeStyle() == 2:
+      if ((CountLineHeadSpaces(prevline) != CountLineHeadSpaces(line)) and
+           not (CountLineHeadSpaces(prevline) % SpaceIndent())):
+        error(filename, linenum, 'whitespace/braces', 4,
+              '{ should be indent the same as the previous line')
 
   # @skull.
-  if Search(r'{', line):
-    if Match(r'(\w(\w|::|\*|\&|\s)*)\(', line):
+  if Search(r'{', line) and not Match(r'\s*{\s*$', line):
+    if CodeStyle() == 1:
+      if Match(r'(\w(\w|::|\*|\&|\s)*)\(', line):
+        error(filename, linenum, 'whitespace/braces', 4,
+              '{ should not appear after a function, there should be a new line')
+    elif CodeStyle() == 2:
       error(filename, linenum, 'whitespace/braces', 4,
-            '{ should not appear after a function, there should be a new line')
+            '{ should not appear this line, there should be a new line')
+
+  if Search(r'}', line) and not Match(r'\s*}\s*$', line):
+    if CodeStyle() == 1:
+      if Match(r'(\w(\w|::|\*|\&|\s)*)\(', line):
+        error(filename, linenum, 'whitespace/braces', 4,
+              '} should not appear after a function, there should be a new line')
+    elif CodeStyle() == 2:
+      error(filename, linenum, 'whitespace/braces', 4,
+            '} should not appear this line, there should be a new line')
 
   # An else clause should be on the same line as the preceding closing brace.
-  if Match(r'\s*else\b\s*(?:if\b|\{|$)', line):
+  if (CodeStyle() == 1) and Match(r'\s*else\b\s*(?:if\b|\{|$)', line):
     prevline = GetPreviousNonBlankLine(clean_lines, linenum)[0]
     if Match(r'\s*}\s*$', prevline):
       error(filename, linenum, 'whitespace/newline', 4,
@@ -4154,20 +4179,21 @@ def CheckBraces(filename, clean_lines, linenum, error):
 
   # If braces come on one side of an else, they should be on both.
   # However, we have to worry about "else if" that spans multiple lines!
-  if Search(r'else if\s*\(', line):       # could be multi-line if
-    brace_on_left = bool(Search(r'}\s*else if\s*\(', line))
-    # find the ( after the if
-    pos = line.find('else if')
-    pos = line.find('(', pos)
-    if pos > 0:
-      (endline, _, endpos) = CloseExpression(clean_lines, linenum, pos)
-      brace_on_right = endline[endpos:].find('{') != -1
-      if brace_on_left != brace_on_right:    # must be brace after if
-        error(filename, linenum, 'readability/braces', 5,
-              'If an else has a brace on one side, it should have it on both')
-  elif Search(r'}\s*else[^{]*$', line) or Match(r'[^}]*else\s*{', line):
-    error(filename, linenum, 'readability/braces', 5,
-          'If an else has a brace on one side, it should have it on both')
+  if (CodeStyle() == 1):
+    if Search(r'else if\s*\(', line):       # could be multi-line if
+      brace_on_left = bool(Search(r'}\s*else if\s*\(', line))
+      # find the ( after the if
+      pos = line.find('else if')
+      pos = line.find('(', pos)
+      if pos > 0:
+        (endline, _, endpos) = CloseExpression(clean_lines, linenum, pos)
+        brace_on_right = endline[endpos:].find('{') != -1
+        if brace_on_left != brace_on_right:    # must be brace after if
+          error(filename, linenum, 'readability/braces', 5,
+                'If an else has a brace on one side, it should have it on both')
+    elif Search(r'}\s*else[^{]*$', line) or Match(r'[^}]*else\s*{', line):
+      error(filename, linenum, 'readability/braces', 5,
+            'If an else has a brace on one side, it should have it on both')
 
   # Likewise, an else should never have the else clause on the same line
   if Search(r'\belse [^\s{]', line) and not Search(r'\belse if\b', line):
@@ -4233,6 +4259,10 @@ def CheckBraces(filename, clean_lines, linenum, error):
           elif next_indent > if_indent:
             error(filename, linenum, 'readability/braces', 4,
                   'If/else bodies with multiple statements require braces')
+
+  if Search(r'{', line) and not Match(r'.*{\s*$', line) and not Match(r'\s*#', line) and not Match(r'.*=\s*{', line):
+    error(filename, linenum, 'readability/braces', 4,
+          '{...} involves code statements should be split into multiple lines ')
 
 
 def CheckTrailingSemicolon(filename, clean_lines, linenum, error):
@@ -4741,6 +4771,12 @@ def CheckStyle(filename, clean_lines, linenum, file_extension, nesting_state,
   # Don't use "elided" lines here, otherwise we can't check commented lines.
   # Don't want to use "raw" either, because we don't want to check inside C++11
   # raw strings,
+  '''
+  print "********************"
+  print clean_lines.elided[linenum]
+  print clean_lines.lines[linenum]
+  print clean_lines.raw_lines[linenum]
+  print clean_lines.lines_without_raw_strings[linenum]'''
   raw_lines = clean_lines.lines_without_raw_strings
   line = raw_lines[linenum]
   prev = raw_lines[linenum - 1] if linenum > 0 else ''
