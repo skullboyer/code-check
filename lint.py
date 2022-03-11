@@ -5562,10 +5562,11 @@ def CheckForNonConstReference(filename, clean_lines, linenum,
   for parameter in re.findall(_RE_PATTERN_REF_PARAM, decls):
     if (not Match(_RE_PATTERN_CONST_REF_PARAM, parameter) and
         not Match(_RE_PATTERN_REF_STREAM_PARAM, parameter)):
-      error(filename, linenum, 'runtime/references', 2,
-            'Is this a non-const reference? '
-            'If so, make const or use a pointer: ' +
-            ReplaceAll(' *<', '<', parameter))
+      if not Search(r'.&\s+', parameter):
+        error(filename, linenum, 'runtime/references', 2,
+              'Is this a non-const reference? '
+              'If so, make const or use a pointer: ' +
+              ReplaceAll(' *<', '<', parameter))
 
 
 def CheckCasts(filename, clean_lines, linenum, error):
