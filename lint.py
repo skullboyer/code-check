@@ -3698,7 +3698,7 @@ def CheckOperatorSpacing(filename, clean_lines, linenum, error):
   # Otherwise not.  Note we only check for non-spaces on *both* sides;
   # sometimes people put non-spaces on one side when aligning ='s among
   # many lines (not that this is behavior that I approve of...)
-  search = Search(r'(\]((=[^==])|>=|<=|==|!=|&=|\^=|\|=|\+=|\*=|\/=|\%=)|={)', line)
+  search = Search(r'(\](\+|-|\*|/|%|&|\||>|<|=|!=|\^=)|={)', line)
   if ((Search(r'[\w.]=', line) or
        Search(r'=[\w.]', line))
       and not Search(r'\b(if|while|for) ', line)
