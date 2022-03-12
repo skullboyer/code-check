@@ -3698,14 +3698,17 @@ def CheckOperatorSpacing(filename, clean_lines, linenum, error):
   # Otherwise not.  Note we only check for non-spaces on *both* sides;
   # sometimes people put non-spaces on one side when aligning ='s among
   # many lines (not that this is behavior that I approve of...)
+  search = Search(r'(\]((=[^==])|>=|<=|==|!=|&=|\^=|\|=|\+=|\*=|\/=|\%=)|={)', line)
   if ((Search(r'[\w.]=', line) or
        Search(r'=[\w.]', line))
       and not Search(r'\b(if|while|for) ', line)
       # Operators taken from [lex.operators] in C++11 standard.
-      and not Search(r'(>=|<=|==|!=|&=|\^=|\|=|\+=|\*=|\/=|\%=)', line)
+      # and not Search(r'(>=|<=|==|!=|&=|\^=|\|=|\+=|\*=|\/=|\%=)', line)
       and not Search(r'operator=', line)):
     error(filename, linenum, 'whitespace/operators', 4,
           'Missing spaces around =')
+  elif search:
+    error(filename, linenum, 'whitespace/operators', 4, 'Missing spaces around %s' % search.group(1))
 
   # It's ok not to have spaces around binary operators like + - * /, but if
   # there's too little whitespace, we get concerned.  It's hard to tell,
@@ -4157,18 +4160,12 @@ def CheckBraces(filename, clean_lines, linenum, error):
       if Match(r'(\w(\w|::|\*|\&|\s)*)\(', line):
         error(filename, linenum, 'whitespace/braces', 4,
               '{ should not appear after a function, there should be a new line')
-    elif CodeStyle() == 2:
-      error(filename, linenum, 'whitespace/braces', 4,
-            '{ should not appear this line, there should be a new line')
 
   if Search(r'}', line) and not Match(r'\s*}\s*$', line):
     if CodeStyle() == 1:
       if Match(r'(\w(\w|::|\*|\&|\s)*)\(', line):
         error(filename, linenum, 'whitespace/braces', 4,
               '} should not appear after a function, there should be a new line')
-    elif CodeStyle() == 2:
-      error(filename, linenum, 'whitespace/braces', 4,
-            '} should not appear this line, there should be a new line')
 
   # An else clause should be on the same line as the preceding closing brace.
   if (CodeStyle() == 1) and Match(r'\s*else\b\s*(?:if\b|\{|$)', line):
