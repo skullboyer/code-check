@@ -744,6 +744,11 @@ _hpp_headers = set(['h'])
 # category should be suppressed for every line.
 _global_error_suppressions = {}
 
+# Used to flag that a function definition has been detected
+# Curly brace style checks after a function definition
+detected_function_definition = False
+
+
 
 def CountLineHeadSpaces(line):
   initial_spaces = 0
@@ -3454,6 +3459,8 @@ def CheckForFunctionLengths(filename, clean_lines, linenum,
     if function_name == 'TEST' or function_name == 'TEST_F' or (
         not Match(r'[A-Z_]+$', function_name)):
       starting_func = True
+      global detected_function_definition
+      detected_function_definition = True
 
   if starting_func:
     body_found = False
@@ -3709,6 +3716,7 @@ def CheckOperatorSpacing(filename, clean_lines, linenum, error):
           'Missing spaces around =')
   elif search:
     error(filename, linenum, 'whitespace/operators', 4, 'Missing spaces around %s' % search.group(1))
+
 
   # It's ok not to have spaces around binary operators like + - * /, but if
   # there's too little whitespace, we get concerned.  It's hard to tell,
@@ -4140,11 +4148,12 @@ def CheckBraces(filename, clean_lines, linenum, error):
     # following line if it is part of an array initialization and would not fit
     # within the 80 character limit of the preceding line.
     # @skull.
+    global detected_function_definition
     prevline = GetPreviousNonBlankLine(clean_lines, linenum)[0]
     if CodeStyle() == 1:
       if (not Search(r'[,;:}{(]\s*$', prevline) and
           not Match(r'\s*#', prevline) and
-          not Match(r'(\w(\w|::|\*|\&|\s)*)\(', prevline) and
+          not detected_function_definition and
           not (GetLineWidth(prevline) > _line_length - 2 and '[]' in prevline)):
         error(filename, linenum, 'whitespace/braces', 4,
               '{ should almost always be at the end of the previous line')
@@ -4155,14 +4164,16 @@ def CheckBraces(filename, clean_lines, linenum, error):
               '{ should be indent the same as the previous line')
 
   # @skull.
-  if Search(r'{', line) and not Match(r'\s*{\s*$', line):
-    if CodeStyle() == 1:
-      if Match(r'(\w(\w|::|\*|\&|\s)*)\(', line):
+  if CodeStyle() == 1:
+    if Search(r'{', line):
+      if not Match(r'\s*{\s*$', line) and detected_function_definition:
+        detected_function_definition = False
         error(filename, linenum, 'whitespace/braces', 4,
               '{ should not appear after a function, there should be a new line')
+      elif Match(r'\s*{\s*$', line) and detected_function_definition:
+        detected_function_definition = False
 
-  if Search(r'}', line) and not Match(r'\s*}\s*$', line):
-    if CodeStyle() == 1:
+    if Search(r'}', line) and not Match(r'\s*}\s*$', line):
       if Match(r'(\w(\w|::|\*|\&|\s)*)\(', line):
         error(filename, linenum, 'whitespace/braces', 4,
               '} should not appear after a function, there should be a new line')
@@ -6755,8 +6766,8 @@ def ParseArguments(args):
       sys.stdout.write("The LINT.cfg configuration file is generated successfully.")
       sys.exit(0)
     elif opt == '--about':
-      sys.stdout.write("Version: 0.3\n")
-      sys.stdout.write("Release: 2022-03-10\n")
+      sys.stdout.write("Version: 0.31\n")
+      sys.stdout.write("Release: 2022-03-14\n")
       sys.stdout.write("Contact: skull.gu@gmail.com\n")
       sys.exit(0)
 
