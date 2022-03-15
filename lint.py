@@ -1645,8 +1645,6 @@ class Stack:
         return self.items.pop()
 
 def ParsePairSymbol(symbol, line, filename, linenum, error):
-    stack = Stack()
-    line_copy = line
     if symbol == '<':
         r_symbol = '>'
     elif symbol == '(':
@@ -1658,49 +1656,64 @@ def ParsePairSymbol(symbol, line, filename, linenum, error):
     else:
       # Input symbols are not parentheses
       return -1
+
+    stack = Stack()
+    line_copy = line
     __REGEX_LEFT_BRACKET = r'\%s([ ]*)' % symbol
     __REGEX_RIGHT_BRACKET = r'([ ]*)\%s' % r_symbol
     position = 0
     while position < len(line):
+        # print "============= line_copy:  %s -- %d" % (line_copy, position)
         position = line_copy.find(symbol) + 1
         if position != 0:
+            # print "find symbol"
             match = Search(__REGEX_LEFT_BRACKET, line_copy)
             if match:
+                # print "push stack"
                 stack.push(len(match.group(1)))
             else:
+                # print "Regular expression calculation exception"
                 return -2
             line_copy = line_copy[position:]
         else:
-            # print 'Parentheses not found'
-            return 1
+            # print "No find symbol"
+            if stack.isEmpty():
+                # print 'Parentheses not found  %s' % symbol
+                return 1
         position = line_copy.find(symbol) + 1
         r_position = line_copy.find(r_symbol) + 1
         if r_position == 0:
-            stack_top = stack.pop()
             # print 'No matching closing parenthesis found inside %s' % r_symbol
             return 2
         else:
             if position == 0:
+                # print "no find symbol"
                 match = Search(__REGEX_RIGHT_BRACKET, line_copy)
-                if stack.isEmpty():
-                    print 'Right parenthesis alone inside %s' % symbol
-                else:
+                if not stack.isEmpty():
                     stack_top = stack.pop()
+                    # print "[pop stack] stack_top: %d, r-space: %d" % (len(match.group(1)), stack_top)
                     if len(match.group(1)) != stack_top:
                         error(filename, linenum, 'whitespace/parens', 5,
                               'Mismatching spaces inside %s %s' % (symbol, r_symbol))
-                # The search for parentheses is complete. Exit as normal
-                return 0
+                    elif len(match.group(1)) not in [0, 1]:
+                        error(filename, linenum, 'whitespace/parens', 5,
+                              'Should have zero or one spaces inside %s and %s' (symbol, r_symbol))
+                line_copy = line_copy[r_position:]
+                # print "The search for parentheses is complete. Exit as normal"
             else:
+                # print "symbol and r-symbol all exist"
                 if r_position < position:
+                    # print "first find r-symbol"
                     match = Search(__REGEX_RIGHT_BRACKET, line_copy)
-                    if stack.isEmpty():
-                        print 'Right parenthesis alone in %s' % symbol
-                    else:
+                    if not stack.isEmpty():
+                        # print "r-pop stack"
                         stack_top = stack.pop()
                         if len(match.group(1)) != stack_top:
                             error(filename, linenum, 'whitespace/parens', 5,
                                   'Mismatching spaces inside %s %s' % (symbol, r_symbol))
+                        elif len(match.group(1)) not in [0, 1]:
+                            error(filename, linenum, 'whitespace/parens', 5,
+                                  'Should have zero or one spaces inside %s and %s' (symbol, r_symbol))
 
 
 def IsCppString(line):
@@ -3907,13 +3920,13 @@ def CheckParenthesisSpacing(filename, clean_lines, linenum, error):
       error(filename, linenum, 'whitespace/parens', 5,
             'Should have zero or one spaces inside ( and ) in %s' %
             match.group(1))
-
-  match = Search(r'(\<|\(|\[|\{)([ ]*).*([ ]*)(\>|\)|\]|\})', line)
-  if match:
-    ParsePairSymbol('<', line, filename, linenum, error)
-    ParsePairSymbol('(', line, filename, linenum, error)
-    ParsePairSymbol('[', line, filename, linenum, error)
-    ParsePairSymbol('{', line, filename, linenum, error)
+  else:
+    match = Search(r'(\<|\(|\[|\{)([ ]*).*([ ]*)(\>|\)|\]|\})', line)
+    if match:
+      ParsePairSymbol('<', line, filename, linenum, error)
+      ParsePairSymbol('(', line, filename, linenum, error)
+      ParsePairSymbol('[', line, filename, linenum, error)
+      ParsePairSymbol('{', line, filename, linenum, error)
 
 def CheckCommaSpacing(filename, clean_lines, linenum, error):
   """Checks for horizontal spacing near commas and semicolons.
