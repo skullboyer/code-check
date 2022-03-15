@@ -749,7 +749,6 @@ _global_error_suppressions = {}
 detected_function_definition = False
 
 
-
 def CountLineHeadSpaces(line):
   initial_spaces = 0
   while initial_spaces < len(line) and line[initial_spaces] == ' ':
@@ -875,7 +874,6 @@ def Search(pattern, s):
   if pattern not in _regexp_compile_cache:
     _regexp_compile_cache[pattern] = sre_compile.compile(pattern)
   return _regexp_compile_cache[pattern].search(s)
-
 
 def _IsSourceExtension(s):
   """File extension (excluding dot) matches a source file extension."""
@@ -1634,6 +1632,75 @@ _RE_PATTERN_CLEANSE_LINE_C_COMMENTS = re.compile(
     _RE_PATTERN_C_COMMENTS + r'\s+|' +
     r'\s+' + _RE_PATTERN_C_COMMENTS + r'(?=\W)|' +
     _RE_PATTERN_C_COMMENTS + r')')
+
+# Check that the number of Spaces measured in parentheses matches
+class Stack:
+    def __init__(self):
+        self.items = []
+    def isEmpty(self):
+        return self.items == []
+    def push(self, item):
+        self.items.append(item)
+    def pop(self):
+        return self.items.pop()
+
+def ParsePairSymbol(symbol, line, filename, linenum, error):
+    stack = Stack()
+    line_copy = line
+    if symbol == '<':
+        r_symbol = '>'
+    elif symbol == '(':
+        r_symbol = ')'
+    elif symbol == '[':
+        r_symbol = ']'
+    elif symbol == '{':
+        r_symbol = '}'
+    else:
+      # Input symbols are not parentheses
+      return -1
+    __REGEX_LEFT_BRACKET = r'\%s([ ]*)' % symbol
+    __REGEX_RIGHT_BRACKET = r'([ ]*)\%s' % r_symbol
+    position = 0
+    while position < len(line):
+        position = line_copy.find(symbol) + 1
+        if position != 0:
+            match = Search(__REGEX_LEFT_BRACKET, line_copy)
+            if match:
+                stack.push(len(match.group(1)))
+            else:
+                return -2
+            line_copy = line_copy[position:]
+        else:
+            # print 'Parentheses not found'
+            return 1
+        position = line_copy.find(symbol) + 1
+        r_position = line_copy.find(r_symbol) + 1
+        if r_position == 0:
+            stack_top = stack.pop()
+            # print 'No matching closing parenthesis found inside %s' % r_symbol
+            return 2
+        else:
+            if position == 0:
+                match = Search(__REGEX_RIGHT_BRACKET, line_copy)
+                if stack.isEmpty():
+                    print 'Right parenthesis alone inside %s' % symbol
+                else:
+                    stack_top = stack.pop()
+                    if len(match.group(1)) != stack_top:
+                        error(filename, linenum, 'whitespace/parens', 5,
+                              'Mismatching spaces inside %s %s' % (symbol, r_symbol))
+                # The search for parentheses is complete. Exit as normal
+                return 0
+            else:
+                if r_position < position:
+                    match = Search(__REGEX_RIGHT_BRACKET, line_copy)
+                    if stack.isEmpty():
+                        print 'Right parenthesis alone in %s' % symbol
+                    else:
+                        stack_top = stack.pop()
+                        if len(match.group(1)) != stack_top:
+                            error(filename, linenum, 'whitespace/parens', 5,
+                                  'Mismatching spaces inside %s %s' % (symbol, r_symbol))
 
 
 def IsCppString(line):
@@ -3456,6 +3523,7 @@ def CheckForFunctionLengths(filename, clean_lines, linenum,
     # If the name is all caps and underscores, figure it's a macro and
     # ignore it, unless it's TEST or TEST_F.
     function_name = match_result.group(1).split()[-1]
+    # print "*** %d -- %s -- %s" % (linenum, line, function_name)
     if function_name == 'TEST' or function_name == 'TEST_F' or (
         not Match(r'[A-Z_]+$', function_name)):
       starting_func = True
@@ -3717,7 +3785,6 @@ def CheckOperatorSpacing(filename, clean_lines, linenum, error):
   elif search:
     error(filename, linenum, 'whitespace/operators', 4, 'Missing spaces around %s' % search.group(1))
 
-
   # It's ok not to have spaces around binary operators like + - * /, but if
   # there's too little whitespace, we get concerned.  It's hard to tell,
   # though, so we punt on this one for now.  TODO.
@@ -3841,6 +3908,12 @@ def CheckParenthesisSpacing(filename, clean_lines, linenum, error):
             'Should have zero or one spaces inside ( and ) in %s' %
             match.group(1))
 
+  match = Search(r'(\<|\(|\[|\{)([ ]*).*([ ]*)(\>|\)|\]|\})', line)
+  if match:
+    ParsePairSymbol('<', line, filename, linenum, error)
+    ParsePairSymbol('(', line, filename, linenum, error)
+    ParsePairSymbol('[', line, filename, linenum, error)
+    ParsePairSymbol('{', line, filename, linenum, error)
 
 def CheckCommaSpacing(filename, clean_lines, linenum, error):
   """Checks for horizontal spacing near commas and semicolons.
@@ -6766,8 +6839,8 @@ def ParseArguments(args):
       sys.stdout.write("The LINT.cfg configuration file is generated successfully.")
       sys.exit(0)
     elif opt == '--about':
-      sys.stdout.write("Version: 0.31\n")
-      sys.stdout.write("Release: 2022-03-14\n")
+      sys.stdout.write("Version: 0.32\n")
+      sys.stdout.write("Release: 2022-03-15\n")
       sys.stdout.write("Contact: skull.gu@gmail.com\n")
       sys.exit(0)
 
