@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 #
-# Copyright (c) 2009 Google Inc. All rights reserved.
+# Copyright (c) 2009 Google Inc.
+# Copyright (c) 2022 skull.gu@gmail.com
+# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -3797,6 +3799,19 @@ def CheckOperatorSpacing(filename, clean_lines, linenum, error):
           'Missing spaces around =')
   elif search:
     error(filename, linenum, 'whitespace/operators', 4, 'Missing spaces around %s' % search.group(1))
+
+  if not detected_function_definition:
+    # Operator single space check ('+ - * / % > < >> << & | && || = == += -= *= /= %= >= <= != &= |= ^= >>= <<=')
+    search = Search(r'([^\+ \]]\+[^\+]|[^\+]\+[^\+ ]|'
+                    r'[^- ]-[^-]|[^\-]\-[^\- ]|'
+                    r'\S\s\w*[^ \(\*]\*[^ \)\*]*|\S\s\w*[^=][^ \(\*]*\*[^ \)\*]|^\s*\w+[ ]\*[ ]|'
+                    r'[^ ]/|/[^= ]|[^ ]%|%[^= ]|'
+                    r'^[^#].*[^ ->]>|^#.*[ ]>|>[^= >]|[^ <]<|^#.*<[ ]|^[^#].*<[^= <]|'
+                    # r'[^ ]>>|>>[^ =]|[^ ]<<|<<[^ =]|'  # replace '>' '<'
+                    r'\S\s\w*[^ \(\&]\&[^ \)\&]*|\S\s\w*[^=][^ \(\&]*\&[^ \)\&])',
+                    line)
+    if search:
+      print "---- %d +++ %s" % (linenum, search.group())
 
   # It's ok not to have spaces around binary operators like + - * /, but if
   # there's too little whitespace, we get concerned.  It's hard to tell,
