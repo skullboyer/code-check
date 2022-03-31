@@ -4369,15 +4369,23 @@ def CheckBraces(filename, clean_lines, linenum, error):
             error(filename, linenum, 'readability/braces', 4,
                   'If/else bodies with multiple statements require braces')
 
+  # If multiple code statements exist on the same line, split them
   if Search(r'{', line) and not Match(r'.*{\s*$', line) and not Match(r'\s*#', line) and not Match(r'.*=\s*{', line):
     error(filename, linenum, 'readability/braces', 4,
           '{...} involves code statements should be split into multiple lines ')
+  if Search(r';.*;$', line):
+    error(filename, linenum, 'readability/braces', 4,
+          '\';..;\' involves code statements should be split into multiple lines ')
+  if Search(r'\s+(if|else|for|while|do)', line) and not Search(r'([\{\)]|(while.*;))$', line):
+    search = Search(r'\s+(if|else|for|while|do)', line)
+    error(filename, linenum, 'readability/braces', 4,
+          '\'%s\' involves code statements should be split into multiple lines ' % search.group(1))
 
   # Code block checks curly braces
   if BlockBraces() == 1:
     if linenum < len(clean_lines.elided) - 1:
       next_line = clean_lines.elided[linenum + 1]
-    if (Search(r'if|else|for|while', line) and not (Search(r'{', line) or Search(r'^\s*{', next_line)) and
+    if (Search(r'\s+(if|else|for|while)', line) and not (Search(r'{', line) or Search(r'^\s*{', next_line)) and
       not Search(r'while.*;$', line)):
       error(filename, linenum, 'readability/braces', 4, 'The code block requires curly braces ')
 
