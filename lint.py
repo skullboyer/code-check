@@ -4373,6 +4373,13 @@ def CheckBraces(filename, clean_lines, linenum, error):
     error(filename, linenum, 'readability/braces', 4,
           '{...} involves code statements should be split into multiple lines ')
 
+  # Code block checks curly braces
+  if BlockBraces() == 1:
+    if linenum < len(clean_lines.elided) - 1:
+      next_line = clean_lines.elided[linenum + 1]
+    if (Search(r'if|else|for|while', line) and not (Search(r'{', line) or Search(r'^\s*{', next_line)) and
+      not Search(r'while.*;$', line)):
+      error(filename, linenum, 'readability/braces', 4, 'The code block requires curly braces ')
 
 def CheckTrailingSemicolon(filename, clean_lines, linenum, error):
   """Looks for redundant trailing semicolon.
