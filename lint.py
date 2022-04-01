@@ -332,10 +332,10 @@ lint_preprocess_space=
 lint_code_style=
 
 # rule.16
-# Function and variable names are lowercase +_
+# The function name is lowercase +_
 # 0: indifferent, 1: required
 # default: 1
-lint_user_naming=
+lint_func_naming=
 
 # rule.17
 # Macro naming rules
@@ -1104,8 +1104,8 @@ class _CppLintState(object):
     self.lint_preprocess_space = -1
     # rule.15: style use K&R
     self.lint_code_style = 1
-    # rule.16: function and variable names are lowercase +_
-    self.lint_user_naming = 1
+    # rule.16: function names are lowercase +_
+    self.lint_func_naming = 1
     # rule.17: macro naming use uppercase + _
     self.lint_macro_naming = 1
     # rule.18: enum naming use uppercase + _
@@ -1363,11 +1363,11 @@ def SetCodeStyle(style):
 def CodeStyle():
   return _cpplint_state.lint_code_style
 
-def SetUserNaming(naming):
-  _cpplint_state.lint_user_naming = naming
+def SetFuncNaming(naming):
+  _cpplint_state.lint_func_naming = naming
 
-def UserNaming():
-  return _cpplint_state.lint_user_naming
+def FuncNaming():
+  return _cpplint_state.lint_func_naming
 
 def SetMacroNaming(naming):
   _cpplint_state.lint_macro_naming = naming
@@ -3560,6 +3560,11 @@ def CheckForFunctionLengths(filename, clean_lines, linenum,
       starting_func = True
       global detected_function_definition
       detected_function_definition = True
+
+    # Function and variable names are lowercase +_
+    if FuncNaming() == 1:
+      if Search(r'[^a-z_]', function_name):
+        error(filename, linenum, 'readability/fname', 5, 'The function naming is invalid.')
 
   if starting_func:
     body_found = False
@@ -6687,8 +6692,8 @@ def ProcessConfigOverrides(filename):
               SetPreprocessSpace(int(val));
             elif name == 'lint_code_style':
               SetCodeStyle(int(val));
-            elif name == 'lint_user_naming':
-              SetUserNaming(int(val));
+            elif name == 'lint_func_naming':
+              SetFuncNaming(int(val));
             elif name == 'lint_macro_naming':
               SetMacroNaming(int(val));
             elif name == 'lint_enum_naming':
