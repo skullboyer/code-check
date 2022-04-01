@@ -373,6 +373,13 @@ lint_blank_line=
 # default: 0
 lint_cstyle_cast=
 
+# rule.23
+# Whether to disallow multiple code statements on the same line
+# eg: "a = 1; b = 2;", "if (1) { c = 3; }"
+#  0: indifferent, 1: forbidden
+# default: 1
+lint_multiple_code=
+
 """
 
 # We categorize each error message we print.  Here are the categories.
@@ -1111,6 +1118,8 @@ class _CppLintState(object):
     self.lint_blank_line = -1
     # rule.22: c-style cast indifferent
     self.lint_cstyle_cast = 0
+    # rule.23 forbidden multiple code on the same line
+    self.lint_multiple_code = 1
 
   def SetOutputFormat(self, output_format):
     """Sets the output format for errors."""
@@ -1395,6 +1404,13 @@ def SetCstyleCast(cast):
 
 def CstyleCast():
   return _cpplint_state.lint_cstyle_cast
+
+def SetMultipleCode(mode):
+  _cpplint_state.lint_multiple_code = mode
+
+def MultipleCode():
+  return _cpplint_state.lint_multiple_code
+
 
 class _FunctionState(object):
   """Tracks current function name and the number of lines in its body."""
@@ -4370,16 +4386,17 @@ def CheckBraces(filename, clean_lines, linenum, error):
                   'If/else bodies with multiple statements require braces')
 
   # If multiple code statements exist on the same line, split them
-  if Search(r'{', line) and not Match(r'.*{\s*$', line) and not Match(r'\s*#', line) and not Match(r'.*=\s*{', line):
-    error(filename, linenum, 'readability/braces', 4,
-          '{...} involves code statements should be split into multiple lines ')
-  if Search(r';.*;$', line):
-    error(filename, linenum, 'readability/braces', 4,
-          '\';..;\' involves code statements should be split into multiple lines ')
-  if Search(r'\s+(if|else|for|while|do)', line) and not Search(r'([\{\)]|(while.*;))$', line):
-    search = Search(r'\s+(if|else|for|while|do)', line)
-    error(filename, linenum, 'readability/braces', 4,
-          '\'%s\' involves code statements should be split into multiple lines ' % search.group(1))
+  if MultipleCode() == 1:
+    if Search(r'{', line) and not Match(r'.*{\s*$', line) and not Match(r'\s*#', line) and not Match(r'.*=\s*{', line):
+      error(filename, linenum, 'readability/braces', 4,
+            '{...} involves code statements should be split into multiple lines ')
+    if Search(r';.*;$', line):
+      error(filename, linenum, 'readability/braces', 4,
+            '\';..;\' involves code statements should be split into multiple lines ')
+    if Search(r'\s+(if|else|for|while|do)', line) and not Search(r'([\{\)]|(while.*;))$', line):
+      search = Search(r'\s+(if|else|for|while|do)', line)
+      error(filename, linenum, 'readability/braces', 4,
+            '\'%s\' involves code statements should be split into multiple lines ' % search.group(1))
 
   # Code block checks curly braces
   if BlockBraces() == 1:
@@ -6649,6 +6666,8 @@ def ProcessConfigOverrides(filename):
               SetBlankLine(int(val));
             elif name == 'lint_cstyle_cast':
               SetCstyleCast(int(val));
+            elif name == 'lint_multiple_code':
+              SetMultipleCode(int(val));
           else:
             sys.stderr.write(
                 'Invalid configuration option (%s) in file %s\n' %
