@@ -2562,6 +2562,15 @@ def CheckForMultilineCommentsAndStrings(filename, clean_lines, linenum, error):
           'do well with such strings, and may give bogus warnings.  '
           'Use C++11 raw strings or concatenation instead.')
 
+  if CommentStyle() == 1:
+    if Search(r'[^/]/\*|\*/', line):
+      error(filename, linenum, 'readability/comment', 5, 'The comment style does not use /**/.')
+
+  if CommentStyle() == 2:
+    if linenum + 1 < clean_lines.NumLines() and linenum > 1:
+      if Search(r'//', line):
+        error(filename, linenum, 'readability/comment', 5, 'The comment style does not use /**/.')
+
 
 # (non-threadsafe name, thread-safe alternative, validation pattern)
 #
@@ -4950,7 +4959,7 @@ def CheckStyle(filename, clean_lines, linenum, file_extension, nesting_state,
   # Don't want to use "raw" either, because we don't want to check inside C++11
   # raw strings,
   '''
-  print "********************"
+  print "********************[clean_lines]"
   print clean_lines.elided[linenum]
   print clean_lines.lines[linenum]
   print clean_lines.raw_lines[linenum]
