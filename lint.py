@@ -362,9 +362,9 @@ lint_devil_numbers=
 lint_comment_style=
 
 # rule.21
-# Whether more than one consecutive blank line is allowed
-# -1: forbidden, 0: indifferent, 1: allowed
-# default: -1
+# Whether to disallow more than one consecutive blank line
+#  0: indifferent, 1: forbidden
+# default: 1
 lint_blank_line=
 
 # rule.22
@@ -1115,7 +1115,7 @@ class _CppLintState(object):
     # rule.20: comment style use '//' & '/**/'
     self.lint_comment_style = 0
     # rule.21: forbidden leave multi blank line
-    self.lint_blank_line = -1
+    self.lint_blank_line = 1
     # rule.22: c-style cast indifferent
     self.lint_cstyle_cast = 0
     # rule.23 forbidden multiple code on the same line
@@ -3789,6 +3789,12 @@ def CheckSpacing(filename, clean_lines, linenum, nesting_state, error):
     error(filename, linenum, 'whitespace/forcolon', 2,
           'Missing space around colon in range-based for loop')
 
+  if BlankLine() == 1:
+    prev_line = clean_lines.raw_lines[linenum - 1]
+    raw_line = clean_lines.raw_lines[linenum]
+    if IsBlankLine(raw_line) and IsBlankLine(prev_line):
+      error(filename, linenum, 'whitespace/blank_line', 3,
+              'Redundant blank line in the code should be deleted.')
 
 def CheckOperatorSpacing(filename, clean_lines, linenum, error):
   """Checks for horizontal spacing around operators.
@@ -4958,12 +4964,6 @@ def CheckStyle(filename, clean_lines, linenum, file_extension, nesting_state,
   # Don't use "elided" lines here, otherwise we can't check commented lines.
   # Don't want to use "raw" either, because we don't want to check inside C++11
   # raw strings,
-  '''
-  print "********************[clean_lines]"
-  print clean_lines.elided[linenum]
-  print clean_lines.lines[linenum]
-  print clean_lines.raw_lines[linenum]
-  print clean_lines.lines_without_raw_strings[linenum]'''
   raw_lines = clean_lines.lines_without_raw_strings
   line = raw_lines[linenum]
   prev = raw_lines[linenum - 1] if linenum > 0 else ''
@@ -6568,6 +6568,14 @@ def ProcessFileData(filename, file_extension, lines, error,
   ProcessGlobalSuppresions(lines)
   RemoveMultiLineComments(filename, lines, error)
   clean_lines = CleansedLines(lines)
+  '''
+  print "***[clean_lines]"
+  for index in range(clean_lines.NumLines()):
+    print clean_lines.elided[index]
+    print clean_lines.lines[index]
+    print clean_lines.raw_lines[index]
+    print clean_lines.lines_without_raw_strings[index]
+    print "------------------------------------------\n"'''
 
   if IsHeaderExtension(file_extension):
     CheckForHeaderGuard(filename, clean_lines, error)
