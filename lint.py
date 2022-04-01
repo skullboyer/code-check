@@ -3827,7 +3827,9 @@ def CheckOperatorSpacing(filename, clean_lines, linenum, error):
                     r'\S\s\w*[^ \(\&]\&[^ \)\&]*|\S\s\w*[^=][^ \(\&]*\&[^ \)\&])',
                     line)
     if search:
-      print "---- %d +++ %s" % (linenum, search.group())
+      # @skull [todo]
+      # print "---- %d +++ %s" % (linenum, search.group())
+      error(filename, linenum, 'whitespace/operators', 4, 'Missing spaces in %s' % search.group(1))
 
   # It's ok not to have spaces around binary operators like + - * /, but if
   # there's too little whitespace, we get concerned.  It's hard to tell,
@@ -4870,10 +4872,35 @@ def CheckDevilFigure(filename, cleansed_line, line, prev_line, linenum, error):
 
 # @skull.
 def CheckMarcoUppercase(filename, linenum, cleansed_line, error):
-  if Match(r'^#define', cleansed_line):
-    if not Search(r'\(', cleansed_line) and Search(r'[^A-Z_]', cleansed_line.split()[1]):
+  if Match(r'\s*#define', cleansed_line):
+    if Search(r'[^A-Z_]', cleansed_line.split()[1]):
       error(filename, linenum, 'build/macro', 4,
             'Macro definition names must use uppercase letters and underscores')
+
+# @skull
+enumeration_region = 0
+def CheckEnumUppercase(filename, linenum, cleansed_line, error):
+  global enumeration_region
+  if Search(r'enum', cleansed_line):
+    if Search(r'}', cleansed_line):
+      string_list = Search(r'\{(.*?)\}', cleansed_line).group(1).split(',')
+      for element in string_list:
+        if Search(r'[^A-Z_ ]', element.split('=')[0]):
+          error(filename, linenum, 'build/enum', 4,
+               'Enumeration variable "%s" names must use uppercase letters and underscores' %
+               element.split('=')[0].strip())
+    else:
+      enumeration_region = 1
+
+  elif enumeration_region == 1:
+    if Search(r'\}', cleansed_line):
+      enumeration_region = 0
+      return
+    if not Search(r'\{', cleansed_line):
+      if Search(r'[^A-Z_ ]', cleansed_line.split(',')[0].split('=')[0]):
+        error(filename, linenum, 'build/enum', 4,
+              'Enumeration variable "%s" names must use uppercase letters and underscores' %
+              cleansed_line.split(',')[0].split('=')[0].strip())
 
 # @skull.
 def CheckPreprocessWhitespace(filename, linenum, cleansed_line, error):
@@ -4946,7 +4973,10 @@ def CheckStyle(filename, clean_lines, linenum, file_extension, nesting_state,
   # @skull.
   CheckDevilFigure(filename, cleansed_line, line, prev, linenum, error)
   CheckPreprocessWhitespace(filename, linenum, cleansed_line, error)
-  CheckMarcoUppercase(filename, linenum, cleansed_line, error)
+  if MacroNaming() == 1:
+    CheckMarcoUppercase(filename, linenum, cleansed_line, error)
+  if EnumNaming() == 1:
+    CheckEnumUppercase(filename, linenum, cleansed_line, error)
 
   while initial_spaces < len(line) and line[initial_spaces] == ' ':
     initial_spaces += 1
