@@ -380,6 +380,12 @@ lint_cstyle_cast=
 # default: 1
 lint_multiple_code=
 
+# rule.24
+# Whether comments are required after '#endif'
+#  0: indifferent, 1: required
+# default: 0
+lint_comment_endif=
+
 """
 
 # We categorize each error message we print.  Here are the categories.
@@ -1120,6 +1126,8 @@ class _CppLintState(object):
     self.lint_cstyle_cast = 0
     # rule.23 forbidden multiple code on the same line
     self.lint_multiple_code = 1
+    # rule.24 indifference comment after #endif
+    self.lint_comment_endif = 0
 
   def SetOutputFormat(self, output_format):
     """Sets the output format for errors."""
@@ -1410,6 +1418,12 @@ def SetMultipleCode(mode):
 
 def MultipleCode():
   return _cpplint_state.lint_multiple_code
+
+def SetCommentEndif(mode):
+  _cpplint_state.lint_comment_endif = mode
+
+def CommentEndif():
+  return _cpplint_state.lint_comment_endif
 
 
 class _FunctionState(object):
@@ -3661,6 +3675,10 @@ def CheckComment(line, filename, linenum, next_line_start, error):
         error(filename, linenum, 'whitespace/comments', 4,
               'Should have a space between // and comment')
 
+  # requires a comment after #endif
+  if CommentEndif() == 1:
+    if Search(r'\s*#endif', line) and not (Search(r'//', line) or Search(r'/\*', line)):
+      error(filename, linenum, 'whitespace/comments', 4, 'Should be a comment after #endif')
 
 def CheckSpacing(filename, clean_lines, linenum, nesting_state, error):
   """Checks for the correctness of various spacing issues in the code.
@@ -6725,6 +6743,8 @@ def ProcessConfigOverrides(filename):
               SetCstyleCast(int(val));
             elif name == 'lint_multiple_code':
               SetMultipleCode(int(val));
+            elif name == 'lint_comment_endif':
+              SetCommentEndif(int(val));
           else:
             sys.stderr.write(
                 'Invalid configuration option (%s) in file %s\n' %
@@ -6958,8 +6978,8 @@ def ParseArguments(args):
       sys.stdout.write("The LINT.cfg configuration file is generated successfully.")
       sys.exit(0)
     elif opt == '--about':
-      sys.stdout.write("Version: 0.32\n")
-      sys.stdout.write("Release: 2022-03-15\n")
+      sys.stdout.write("Version: 0.33\n")
+      sys.stdout.write("Release: 2022-04-01\n")
       sys.stdout.write("Contact: skull.gu@gmail.com\n")
       sys.exit(0)
 
