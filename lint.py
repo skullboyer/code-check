@@ -60,6 +60,70 @@ try:
 except NameError:
   xrange = range  # Python 3
 
+_HELP = """
+Syntax: lint  [--verbose=#] [--output=vs7] [--filter=-x,+y,...]
+              [--counting=total|toplevel|detailed] [--root=subdir]
+              [--linelength=digits] [--headers=x,y,...]
+              [--quiet][--help][--useage][--generate][--about]
+        <file> [file] ...
+
+  Option:
+
+    output=vs7
+      output is formate: 'emacs', 'vs7', 'eclipse'
+
+    verbose=#
+      output level: 0-5, message less than [verbose] will not be printed
+
+    quiet
+      Don't print anything if no errors are found
+
+    filter=-x,+y,...
+      To see a list of all the categories used in cpplint, pass no arg: --filter=
+      Examples: --filter=-whitespace,+whitespace/braces
+                --filter=whitespace,runtime/printf,+runtime/printf_format
+                --filter=-,+build/include_what_you_use
+
+    counting=total
+      Error statistics style. The total number of errors found is always printed
+      total    => Total errors found:
+      toplevel => Category 'whitespace' errors found:
+      detailed => Category 'whitespace/parens' errors found:
+
+    root=subdir
+      The root directory used for deriving header guard CPP variable.
+      Examples:
+        code directory: src/chrome/browser/ui/browser/
+        No flag               => CHROME_BROWSER_UI_BROWSER_H_
+        --root=chrome         => BROWSER_UI_BROWSER_H_
+        --root=chrome/browser => UI_BROWSER_H_
+        --root=..             => SRC_CHROME_BROWSER_UI_BROWSER_H_
+
+    linelength=digits
+      Code line length, default: 120 characters.
+
+    extensions=extension,extension,...
+      The allowed file extensions that cpplint will check
+      Examples:
+        --extensions=hpp,cpp
+
+    headers=x,y,...
+      Examples:
+        --headers=hpp,hxx
+        --headers=hpp
+
+    help
+      Displays short usage information and exits.
+
+    useage
+      Displays detaile usage information and exits.
+
+    generate
+      Generate lint config file 'LINT.cfg' and exits
+
+    about
+      Displays version information and exits.
+"""
 
 _USAGE = """
 Syntax: cpplint.py [--verbose=#] [--output=vs7] [--filter=-x,+y,...]
@@ -6926,6 +6990,7 @@ def ParseArguments(args):
                                                  'extensions=',
                                                  'headers=',
                                                  'quiet',
+                                                 'useage',
                                                  'generate',
                                                  'about'])
   except getopt.GetoptError:
@@ -6938,8 +7003,11 @@ def ParseArguments(args):
   counting_style = ''
 
   for (opt, val) in opts:
-    if opt == '--help':
+    if opt == '--useage':
       PrintUsage(None)
+    elif opt == '--help':
+      sys.stdout.write(_HELP)
+      sys.exit(0)
     elif opt == '--output':
       if val not in ('emacs', 'vs7', 'eclipse'):
         PrintUsage('The only allowed output formats are emacs, vs7 and eclipse.')
