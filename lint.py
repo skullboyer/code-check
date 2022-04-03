@@ -473,6 +473,9 @@ _ERROR_CATEGORIES = [
     'build/namespaces',
     'build/printf_format',
     'build/storage_class',
+    'build/devil',
+    'build/macro',
+    'build/enum',
     'legal/copyright',
     'readability/alt_tokens',
     'readability/braces',
@@ -489,6 +492,10 @@ _ERROR_CATEGORIES = [
     'readability/strings',
     'readability/todo',
     'readability/utf8',
+    'readability/comment',
+    'readability/fname',
+    'readability/braces',
+    'readability/filename',
     'runtime/arrays',
     'runtime/casting',
     'runtime/explicit',
@@ -523,6 +530,7 @@ _ERROR_CATEGORIES = [
     'whitespace/semicolon',
     'whitespace/tab',
     'whitespace/todo',
+    'whitespace/preprocess',
     ]
 
 # These error categories are no longer enforced by cpplint, but for backwards-
@@ -3917,7 +3925,7 @@ def CheckOperatorSpacing(filename, clean_lines, linenum, error):
           'Missing spaces around =')
   elif search:
     error(filename, linenum, 'whitespace/operators', 4, 'Missing spaces around %s' % search.group(1))
-
+  '''
   if not detected_function_definition:
     # Operator single space check ('+ - * / % > < >> << & | && || = == += -= *= /= %= >= <= != &= |= ^= >>= <<=')
     search = Search(r'([^\+ \]]\+[^\+]|[^\+]\+[^\+ ]|'
@@ -3926,12 +3934,54 @@ def CheckOperatorSpacing(filename, clean_lines, linenum, error):
                     r'[^ ]/|/[^= ]|[^ ]%|%[^= ]|'
                     r'^[^#].*[^ ->]>|^#.*[ ]>|>[^= >]|[^ <]<|^#.*<[ ]|^[^#].*<[^= <]|'
                     # r'[^ ]>>|>>[^ =]|[^ ]<<|<<[^ =]|'  # replace '>' '<'
-                    r'\S\s\w*[^ \(\&]\&[^ \)\&]*|\S\s\w*[^=][^ \(\&]*\&[^ \)\&])',
+                    r'\S\s\w*[^ \(\&]\&[^ \)\&]*|\S\s\w*[^=][^ \(\&]*\&[^ \)\&]|'
+                    r'\S\?|\?\S|\S:|:\S)',
                     line)
     if search:
       # @skull [todo]
-      # print "---- %d +++ %s" % (linenum, search.group())
-      error(filename, linenum, 'whitespace/operators', 4, 'Missing spaces in %s' % search.group(1))
+      print "---- %d +++ %s" % (linenum, search.group())
+      error(filename, linenum, 'whitespace/operators', 4, 'Missing spaces in %s' % search.group(1))'''
+
+  search = Search(r'\S\+|\+\S', line)
+  if search and not Search(r'\+\+[,;\)\]\(\w ]|[ ]\+=[ ]', line):
+    error(filename, linenum, 'whitespace/operators', 4, 'Missing spaces in %s' % search.group())
+
+  search = Search(r'\S\-|\-\S', line)
+  if search and not Search(r'\-\-[,;\)\]\(\w ]|[ ]\-=[ ]|->|return[ ][\(\[]*-', line):
+    error(filename, linenum, 'whitespace/operators', 4, 'Missing spaces in %s' % search.group())
+
+  # '*exp' This form is difficult to detect. Can't tell if it's a definition or an expression.
+  search = Search(r'\S\*|\*\S', line)
+  if search and not Search(r'[ ]\*+[\(\w]|[ ]\*=[ ]|[ ]\*\)', line):
+    error(filename, linenum, 'whitespace/operators', 4, 'Missing spaces in %s' % search.group())
+
+  search = Search(r'\S/|/\S|\S%|%\S', line)
+  if search and not Search(r'[ ](/=|%=)[ ]', line):
+    error(filename, linenum, 'whitespace/operators', 4, 'Missing spaces in %s' % search.group())
+
+  search = Search(r'\S<|<\S', line)
+  if search and not Search(r'[ ](<=|<<|<<=)[ ]', line):
+    error(filename, linenum, 'whitespace/operators', 4, 'Missing spaces in %s' % search.group())
+
+  search = Search(r'\S>|>\S', line)
+  if search and not Search(r'[ ](>=|>>|>>=)[ ]|->', line):
+    error(filename, linenum, 'whitespace/operators', 4, 'Missing spaces in %s' % search.group())
+
+  search = Search(r'\S&|&\S', line)
+  if search and not Search(r'[ ](&=|&&)[ ]|=[ ](\(.*\))*&', line):
+    error(filename, linenum, 'whitespace/operators', 4, 'Missing spaces in %s' % search.group())
+
+  search = Search(r'\S\||\|\S', line)
+  if search and not Search(r'[ ](\|=|\|\|)[ ]', line):
+    error(filename, linenum, 'whitespace/operators', 4, 'Missing spaces in %s' % search.group())
+
+  search = Search(r'\S!=|!=\S|\S!=\S|\S^=|^=\S|\S^=\S', line)
+  if search:
+    error(filename, linenum, 'whitespace/operators', 4, 'Missing spaces in %s' % search.group())
+
+  search = Search(r'\?.*:', line)
+  if search and not Search(r'[ ]{1,}\?[ ]{1,}.*[ ]{1,}:[ ]{1,}', line):
+    error(filename, linenum, 'whitespace/operators', 4, 'Missing spaces in %s' % search.group())
 
   # It's ok not to have spaces around binary operators like + - * /, but if
   # there's too little whitespace, we get concerned.  It's hard to tell,
@@ -6848,7 +6898,7 @@ def CheckFileName(filename, error):
       ERROR_MESSAGE = "The file name consists of uppercase letters, digits, and underscores."
 
     if _RE_PATTERN_FILE_NAMING.search(file_delete_extension):
-      error(filename, "name", 'build/filename', 4, ERROR_MESSAGE)
+      error(filename, "name", 'readability/filename', 4, ERROR_MESSAGE)
 
 def ProcessFile(filename, vlevel, extra_check_functions=[]):
   """Does google-lint on a single file.
@@ -7046,8 +7096,8 @@ def ParseArguments(args):
       sys.stdout.write("The LINT.cfg configuration file is generated successfully.")
       sys.exit(0)
     elif opt == '--about':
-      sys.stdout.write("Version: 0.33\n")
-      sys.stdout.write("Release: 2022-04-01\n")
+      sys.stdout.write("Version: 0.34\n")
+      sys.stdout.write("Release: 2022-04-03\n")
       sys.stdout.write("Contact: skull.gu@gmail.com\n")
       sys.exit(0)
 
