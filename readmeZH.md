@@ -1,50 +1,50 @@
 
-Introduction of Lint
+介绍 Lint
 ---
-* The content introduced in this warehouse involves static code checking and coding style checking
-* This mainly introduces coding style checking. Lint is a modified version of cpplint based on Google coding style checking, and it is also named to distinguish it
-* The advantages of lint over cpplint are as follows:
-  * Lint supports custom coding style checking (through configuration files), not cpplint specific to google style
-  * Lint supports generating result files to view and jump through cppcheck host computer
+* 本仓介绍的内容涉及代码静态检查和编码风格检查
+* 但主要放在编码风格检查，lint是基于google编码风格检查cpplint的修改版，起别名也是为了区别
+* lint较于cpplint优势如下：
+  * lint支持自定义编码风格检查(通过配置文件)，而非cpplint特定于google风格
+  * lint支持生成结果文件通过cppcheck上位机查看和跳转
 
-Quick Start
+快速开始
 ---
 ```
 .
-|————doc  (Documentation and process files)
+|————doc  (说明文档及过程文件)
 |
-|————exe  (Packaged executable program)
+|————exe  (打包好的可执行程序)
 |
-|————git_hook  (Embed hook file in git)
+|————git_hook  (嵌入git的钩子文件)
 |
-|————.scripts  (Scripts for special usage)
+|————.scripts  (特殊用法的脚本)
 |
-|____lint.py  (Cpplint improved version)
+|____lint.py  (cpplint改进版)
 ```
 
-Application Scenarios
+应用场景
 ---
->Embed git, check during commit phase<br>
+>嵌入git，在提交阶段进行检查<br>
 
-Place the files in the git_hook in the .git/hooks path of your own project to trigger code checks when you commit
+将git_hook中的文件放在自己项目的.git/hooks路径下，在提交时便会触发代码检查
 
-![git check in commit](doc/git_commit.png)
+![git提交时检查](doc/git_commit.png)
 
->Independent use, based on specific files or folders
+>独立使用，基于特定的文件或文件夹
 
-Place the script lint_folder.sh and format_cpplint.sh in .scripts at the same level as the directory you want to check
+将.scripts中的脚本lint_folder.sh和format_cpplint.sh放在要检查的目录同一级即可
 
-![Directory check](doc/lint_folder.gif)
+![目录检查](doc/lint_folder.gif)
 
->Embed jenkins for automated build checking
+>嵌入jenkins进行自动化构建检查
 ***
 
-### The results of lint check can be parsed by cppcheck host computer
->Ensure that the checked`xml`result is placed at the previous level of the folder just checked, and then use`cppcheck`to open it to achieve code jumping
+### lint检查的结果可以借助cppcheck上位机解析
+>确保检查后的`xml`结果放置在刚检查文件夹的上一级，再使用`cppcheck`打开方可实现代码跳转
 
-![parse lint result](doc/parse_lint.png)
+![解析lint结果](doc/parse_lint.png)
 
-How To Use
+用法
 ---
 ```txt
 ./lint.exe --help
@@ -113,14 +113,14 @@ Syntax: lint  [--verbose=#] [--output=vs7] [--filter=-x,+y,...]
       Displays version information and exits.
 ```
 
-Configuration
+配置
 ---
->Generate custom encoding style configuration file LINT.cfg
-```bash
+>生成自定义编码风格配置文件LINT.cfg
+```
 $ ./lint.exe --generate
 The LINT.cfg configuration file is generated successfully.
 ```
->Configuration file description
+>配置文件说明
 ```python
 # Copyright (c) 2022 skull.gu@gmail.com. All rights reserved.
 
@@ -309,43 +309,43 @@ lint_multiple_code=
 lint_comment_endif=
 
 ```
->The configuration file is stored in the same level directory as Lint, usually in the top-level directory of the project<br>
+>配置文件的与Lint存放在同一级目录，一般是在项目顶级目录<br>
 
-In Lint, the configuration file will be read, and the option parameters determine the rules to be checked. If the configuration file is not found, Lint uses the default configuration for rule checking
+在Lint时会读取配置文件，其中的选项参数决定检查的规则，如果没有找见配置文件则Lint使用默认配置进行规则检查
 
 
-Progress notes
+进展说明
 ---
-1. File name naming rules     ***`[DONE]`***
-2. Does the beginning of the file require writing copyright?    ***`[DONE]`***
-3. Is a new line required at the end of the file    ***`[DONE]`***
-4. Whether to allow the use of TAB    ***`[DONE]`***
-5. Code line length requirement    ***`[DONE]`***
-6. Number of function lines required    ***`[DONE]`***
-7. Number of spaces for code indentation    ***`[DONE]`***
-8. Is extra space allowed at the end of a line    ***`[DONE]`***
-9. Whether to allow multiple instructions to appear in one line    ***`[DONE]`***
-10. Whether to require Code Block (if | else | for | while) to use curly braces  [1]    ***`[DONE]`***
-11. Do you require 1 space before and after the keyword    ***`[DONE]`***
-12. Whether to leave 1 space before and after the operator (partial implementation)    ***`[TODO]`***
-13. Whether to require preprocessing keyword top grid '#include|#>define|if|#elif|#if>def|#ifn>def|#endif'    ***`[DONE]`***
-14. Whether to allow spaces after preprocessing keywords hash marks '#include|#>define|if|#elif|#if>def|#ifn>def|#endif'    ***`[DONE]`***
-15. Code style selection (implemented'K & R ',' Allman ')   ***`[TODO]`***
-16. The function name naming convention is lowercase+_    ***`[DONE]`***
-17. Macro naming rules    ***`[DONE]`***
-18. Enumeration naming rules  [1]    ***`[DONE]`***
-19. Whether devil numbers are allowed to appear    ***`[DONE]`***
-20. Annotation style selection    ***`[DONE]`***
-21. Whether to prohibit consecutive blank lines exceeding 1 line    ***`[DONE]`***
-22. Type conversion uses C-style cast(static_cast|const_cast|reinterpret_cast)    ***`[DONE]`***
-23. Whether to prohibit multiple code statements on the same line    ***`[DONE]`***
-24. Whether to require comments after '#endif'    ***`[DONE]`***
+1. 文件名命名规则     ***`[DONE]`***
+2. 文件首是否要求书写版权    ***`[DONE]`***
+3. 文件尾是否要求新行    ***`[DONE]`***
+4. 是否允许使用TAB    ***`[DONE]`***
+5. 代码行长度要求    ***`[DONE]`***
+6. 函数体行数要求    ***`[DONE]`***
+7. 代码缩进空格数    ***`[DONE]`***
+8. 行尾多余空格是否允许    ***`[DONE]`***
+9. 是否允许一行出现多条指令    ***`[DONE]`***
+10. 是否要求代码块(if|else|for|while)使用花括号  [1]    ***`[DONE]`***
+11. 是否要求关键字前后留1个空格    ***`[DONE]`***
+12. 是否要求运算符前后留1个空格(部分实现)    ***`[TODO]`***
+13. 是否要求预处理关键字顶格 '#include|#>define|if|#elif|#if>def|#ifn>def|#endif'    ***`[DONE]`***
+14. 是否允许预处理关键字井号后有空格'#include|#>define|if|#elif|#if>def|#ifn>def|#endif'    ***`[DONE]`***
+15. 代码风格选择(实现了'K&R', 'Allman')   ***`[TODO]`***
+16. 函数名命名规则为小写+_    ***`[DONE]`***
+17. 宏命名规则    ***`[DONE]`***
+18. 枚举命名规则  [1]    ***`[DONE]`***
+19. 是否允许出现魔鬼数字    ***`[DONE]`***
+20. 注释风格选择    ***`[DONE]`***
+21. 是否禁止连续空行超过1行    ***`[DONE]`***
+22. 类型转换是否使用C-style cast(static_cast|const_cast|reinterpret_cast)    ***`[DONE]`***
+23. 是否禁止多条代码语句在同一行    ***`[DONE]`***
+24. '#endif'后是否要求带注释    ***`[DONE]`***
 
-Note
+[注]
 ---
-Use the pyinstaller tool to package python files into executable files. Advantage: can run as long as it is in a windows environment<br>
-Environment: Python 2.7 cannot be installed directly, a specific version is required `pip2 install pyinstaller==3.2.1`
+使用pyinstaller工具将python文件打包成可执行文件，优势：只要windows环境就能运行<br>
+环境：python2.7不能直接安装，需要特定版本 `pip2 install pyinstaller==3.2.1`
 
-Work Together
--------
-`issue` Welcome to use and feedback
+共同进步
+---
+大家在使用过程中，发现任何bug及改进点欢迎提`issue`反馈给我
